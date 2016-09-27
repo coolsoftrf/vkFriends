@@ -35,12 +35,16 @@ implements AppBarLayout.OnOffsetChangedListener {
 
         initParams();
 
-        ImageView anchor = (ImageView) findViewById(R.id.anchor);
-        ViewGroup.LayoutParams lp = anchor.getLayoutParams();
-        lp.height = mAppBarHeight * 3;
+        ImageView anchor = (ImageView) findViewById(R.id.padding);
+        if (anchor!= null) {
+            ViewGroup.LayoutParams lp = anchor.getLayoutParams();
+            lp.height = mAppBarHeight * 3;
+        }
 
         AppBarLayout appBar = (AppBarLayout) findViewById(R.id.app_bar);
-        appBar.addOnOffsetChangedListener(this);
+        if (appBar != null) {
+            appBar.addOnOffsetChangedListener(this);
+        }
 
         mFl = (FrameLayout) findViewById(R.id.title);
 
