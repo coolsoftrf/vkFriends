@@ -1,8 +1,10 @@
 package ru.coolsoft.vkfriends;
 
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -14,7 +16,8 @@ import android.widget.Space;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity
-implements AppBarLayout.OnOffsetChangedListener {
+implements AppBarLayout.OnOffsetChangedListener
+, NavigationView.OnNavigationItemSelectedListener{
 
     private FrameLayout mFl;
     private TextView mContactNameLeft;
@@ -46,6 +49,10 @@ implements AppBarLayout.OnOffsetChangedListener {
             appBar.addOnOffsetChangedListener(this);
         }
 
+        NavigationView nav = (NavigationView) findViewById(R.id.navigation);
+        if(nav != null) {
+            nav.setNavigationItemSelectedListener(this);
+        }
         mFl = (FrameLayout) findViewById(R.id.title);
 
         mContactNameLeft = (TextView) findViewById(R.id.name1);
@@ -63,27 +70,6 @@ implements AppBarLayout.OnOffsetChangedListener {
 
         mTextSizeStart = getResources().getDimensionPixelSize(R.dimen.text_size);
         mTextSizeEnd = getResources().getDimensionPixelSize(R.dimen.text_size_small);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -124,5 +110,19 @@ implements AppBarLayout.OnOffsetChangedListener {
         lp = mSpace2.getLayoutParams();
         lp.width = space;
         mSpace2.setLayoutParams(lp);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle nav bar item clicks here.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

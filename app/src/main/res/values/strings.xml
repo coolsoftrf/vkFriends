@@ -94,4 +94,19 @@
     <string name="name2_placeholder">2nd Contact Long Name</string>
 
     <string name="padding_content_description">Padding view for app bar</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_account">Account</string>
+
+    <string name="pref_key_login" translatable="false">login</string>
+    <string name="pref_title_login">Login</string>
+
+    <string name="pref_key_password" translatable="false">password</string>
+    <string name="pref_title_password">Password</string>
+
+    <string name="pref_ringtone_silent">Silent</string>
+
 </resources>
