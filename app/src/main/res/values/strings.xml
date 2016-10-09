@@ -89,7 +89,10 @@
         "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
         "when a user tries to pick up one of cards.\n\n"
     </string>
+
     <string name="action_settings">Settings</string>
+    <string name="action_login">Login</string>
+
     <string name="name1_placeholder">1st Contact Long Name</string>
     <string name="name2_placeholder">2nd Contact Long Name</string>
 
@@ -101,11 +104,8 @@
     <!-- Example General settings -->
     <string name="pref_header_account">Account</string>
 
-    <string name="pref_key_login" translatable="false">login</string>
-    <string name="pref_title_login">Login</string>
-
-    <string name="pref_key_password" translatable="false">password</string>
-    <string name="pref_title_password">Password</string>
+    <string name="pref_title_login">Login (not used)</string>
+    <string name="pref_title_password">Password (not used)</string>
 
     <string name="pref_ringtone_silent">Silent</string>
 

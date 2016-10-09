@@ -120,11 +120,21 @@
         <include layout="@layout/content_main" />
 
     </android.support.design.widget.CoordinatorLayout>
+
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
         app:headerLayout="@layout/drawer_header"
-        app:menu="@menu/menu_main"/>
+        android:layout_gravity="start"
+        app:menu="@menu/menu_main">
+
+        <ProgressBar
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/waiter"
+            android:indeterminate="true"
+            android:visibility="gone"/>
+
+    </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>
