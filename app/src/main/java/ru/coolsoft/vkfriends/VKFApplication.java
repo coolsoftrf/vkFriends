@@ -18,6 +18,7 @@ public class VKFApplication extends Application {
 
     public static final String PREF_KEY_ACCESS_TOKEN = "access_token";
     public static final String PREF_KEY_USERNAME = "user_name";
+    public static final String PREF_KEY_USERPHOTO = "user_photo_url";
 
     private static VKFApplication mApp;
 
@@ -31,7 +32,9 @@ public class VKFApplication extends Application {
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(VKFApplication.this).edit();
                 editor.remove(PREF_KEY_ACCESS_TOKEN);
                 editor.apply();
-            }
+            } /*else {
+                newToken.saveTokenToSharedPreferences(VKFApplication.this, PREF_KEY_ACCESS_TOKEN);
+            }*/
         }
     };
 

@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
@@ -32,10 +34,18 @@ import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiUser;
 import com.vk.sdk.api.model.VKList;
 
+import android.net.Uri;
+
+import java.io.File;
+
+import ru.coolsoft.vkfriends.loaders.ImageLoader;
+import ru.coolsoft.vkfriends.loaders.SharedPreferencesSource;
+
 public class MainActivity extends AppCompatActivity
 implements AppBarLayout.OnOffsetChangedListener
 , NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener {
     private final static String TAG = MainActivity.class.getSimpleName();
+    private final static int LOADER_ID_USER_PHOTO = 1;
 
     //main view controls
     private FrameLayout mFl;
@@ -54,6 +64,7 @@ implements AppBarLayout.OnOffsetChangedListener
     //navigation controls
     private NavigationView mNavView;
     private ProgressBar mWaiter;
+    private ProgressBar mPhotoWaiter;
 
     //callback handlers
     //Handler mDelayHandler = new Handler();
@@ -89,15 +100,29 @@ implements AppBarLayout.OnOffsetChangedListener
                         new Runnable() {
                             @Override
                             public void run() {/**/
-                                Log.d(TAG, "Updating USERNAME preference");
-                                if (newName.equals(name)){
-                                    refreshNavigationView();
-                                } else {
-                                    SharedPreferences.Editor editor = sp.edit();
-                                    editor.putString(VKFApplication.PREF_KEY_USERNAME, newName);
-                                    editor.apply();
-                                }
-                                mWaiter.setVisibility(View.GONE);
+                    Log.d(TAG, "Updating USERNAME preference");
+                    SharedPreferences.Editor editor = null;
+                    if (newName.equals(name)){
+                        refreshNavigationView();
+                    } else {
+                        editor = sp.edit();
+                        editor.putString(VKFApplication.PREF_KEY_USERNAME, newName);
+                    }
+
+                    final String photo = sp.getString(VKFApplication.PREF_KEY_USERPHOTO, null);
+                    final String newPhoto = me.photo_200;
+                    if (!newPhoto.equals(photo)){
+                        if (editor == null){
+                            editor = sp.edit();
+                        }
+                        editor.putString(VKFApplication.PREF_KEY_USERPHOTO, newPhoto);
+                    }
+
+                    if (editor != null){
+                        editor.apply();
+                    }
+
+                    mWaiter.setVisibility(View.GONE);
                             /**}
                         }
                         , 5000
@@ -116,6 +141,46 @@ implements AppBarLayout.OnOffsetChangedListener
             mWaiter.setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
             super.onError(error);
+        }
+    };
+
+    LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
+        @Override
+        public Loader<String> onCreateLoader(int id, Bundle args) {
+            if (id == LOADER_ID_USER_PHOTO){
+                ImageLoader il = new ImageLoader(MainActivity.this
+                        , new SharedPreferencesSource(
+                            PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+                            , VKFApplication.PREF_KEY_USERPHOTO
+                ));
+                il.setOnDownloadStartedListener(new ImageLoader.OnDownloadStartedListener() {
+                    @Override
+                    public void onDownloadStarted() {
+                        mPhotoWaiter.setVisibility(View.VISIBLE);
+                    }
+                });
+                return  il;
+            }
+            return null;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<String> loader, String photoFileName) {
+            if (loader.getId() == LOADER_ID_USER_PHOTO) {
+                final ImageView avatar = (ImageView) findViewById(R.id.avatar);
+                if (avatar != null) {
+                    if (photoFileName != null){
+                        avatar.setImageURI(Uri.fromFile(new File(photoFileName)));
+                    } else {
+                        avatar.setImageResource(R.drawable.blue_user_icon);
+                    }
+                }
+                mPhotoWaiter.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<String> loader) {
         }
     };
 
@@ -157,9 +222,11 @@ implements AppBarLayout.OnOffsetChangedListener
             if (VKFApplication.app().isInitialized()){
                 refreshNavigationView();
             } else {
+                getSupportLoaderManager().initLoader(LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
                 requestAccountDetails();
                 VKFApplication.app().setInitialized();
             }
+            mPhotoWaiter = (ProgressBar) mNavView.getHeaderView(0).findViewById(R.id.photo_waiter);
         }
 
         mFl = (FrameLayout) findViewById(R.id.title);
@@ -225,7 +292,7 @@ implements AppBarLayout.OnOffsetChangedListener
                 startActivity(intent);
                 return true;
             case R.id.action_login:
-                VKSdk.login(this, VKScope.FRIENDS);
+                VKSdk.login(this, VKScope.FRIENDS, VKScope.PHOTOS);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -247,6 +314,12 @@ implements AppBarLayout.OnOffsetChangedListener
             case VKFApplication.PREF_KEY_USERNAME:
                 refreshNavigationView();
                 break;
+            case VKFApplication.PREF_KEY_USERPHOTO:
+                final Loader ldr = getSupportLoaderManager().getLoader(LOADER_ID_USER_PHOTO);
+                if (ldr != null) {
+                    ldr.onContentChanged();
+                }
+                break;
             default:
                 break;
         }
@@ -265,6 +338,7 @@ implements AppBarLayout.OnOffsetChangedListener
                 Log.d(TAG, "removing USERNAME preference");
                 SharedPreferences.Editor editor = sp.edit();
                 editor.remove(VKFApplication.PREF_KEY_USERNAME);
+                editor.remove(VKFApplication.PREF_KEY_USERPHOTO);
                 editor.apply();
             }
         } else {
@@ -288,12 +362,16 @@ implements AppBarLayout.OnOffsetChangedListener
         final MenuItem miLogin = mNavView.getMenu().findItem(R.id.action_login);
         final String name = PreferenceManager.getDefaultSharedPreferences(this).getString(VKFApplication.PREF_KEY_USERNAME, null);
 
-        //ToDo: update user image as well
         Log.d(TAG, "Updating user name in Navigation View. Current name is " + String.valueOf(name));
         if (name == null) {
             miLogin.setTitle(R.string.action_login);
         } else {
             miLogin.setTitle(name);
+        }
+
+        final Loader ldr = getSupportLoaderManager().getLoader(LOADER_ID_USER_PHOTO);
+        if (ldr != null) {
+            ldr.onContentChanged();
         }
     }
 }
