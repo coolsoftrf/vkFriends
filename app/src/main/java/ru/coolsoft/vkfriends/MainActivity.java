@@ -28,7 +28,9 @@ import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
 import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiUser;
@@ -47,6 +49,8 @@ implements AppBarLayout.OnOffsetChangedListener
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static int LOADER_ID_USER_PHOTO = 1;
 
+    private final static String FIELDS_PHOTO200 = "photo_200";
+
     //main view controls
     private FrameLayout mFl;
     private TextView mContactNameLeft;
@@ -63,6 +67,7 @@ implements AppBarLayout.OnOffsetChangedListener
 
     //navigation controls
     private NavigationView mNavView;
+    private ImageView mAvatar;
     private ProgressBar mWaiter;
     private ProgressBar mPhotoWaiter;
 
@@ -156,7 +161,12 @@ implements AppBarLayout.OnOffsetChangedListener
                 il.setOnDownloadStartedListener(new ImageLoader.OnDownloadStartedListener() {
                     @Override
                     public void onDownloadStarted() {
-                        mPhotoWaiter.setVisibility(View.VISIBLE);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPhotoWaiter.setVisibility(View.VISIBLE);
+                            }
+                        });
                     }
                 });
                 return  il;
@@ -167,12 +177,11 @@ implements AppBarLayout.OnOffsetChangedListener
         @Override
         public void onLoadFinished(Loader<String> loader, String photoFileName) {
             if (loader.getId() == LOADER_ID_USER_PHOTO) {
-                final ImageView avatar = (ImageView) findViewById(R.id.avatar);
-                if (avatar != null) {
+                if (mAvatar != null) {
                     if (photoFileName != null){
-                        avatar.setImageURI(Uri.fromFile(new File(photoFileName)));
+                        mAvatar.setImageURI(Uri.fromFile(new File(photoFileName)));
                     } else {
-                        avatar.setImageResource(R.drawable.blue_user_icon);
+                        mAvatar.setImageResource(R.drawable.blue_user_icon);
                     }
                 }
                 mPhotoWaiter.setVisibility(View.GONE);
@@ -226,6 +235,8 @@ implements AppBarLayout.OnOffsetChangedListener
                 requestAccountDetails();
                 VKFApplication.app().setInitialized();
             }
+
+            mAvatar = (ImageView) mNavView.getHeaderView(0).findViewById(R.id.avatar);
             mPhotoWaiter = (ProgressBar) mNavView.getHeaderView(0).findViewById(R.id.photo_waiter);
         }
 
@@ -344,7 +355,7 @@ implements AppBarLayout.OnOffsetChangedListener
         } else {
             mWaiter.setVisibility(View.VISIBLE);
 
-            VKRequest request = VKApi.users().get();
+            VKRequest request = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, FIELDS_PHOTO200));
             Log.d(TAG, "requesting USER data");
             request.executeWithListener(mVKCurrentUserRequestListener);
         }

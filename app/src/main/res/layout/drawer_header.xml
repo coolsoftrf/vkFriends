@@ -8,6 +8,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/avatar"
         android:src="@drawable/blue_user_icon"
+        android:adjustViewBounds="true"
         tools:ignore="ContentDescription" />
     <ProgressBar
         android:layout_width="match_parent"
