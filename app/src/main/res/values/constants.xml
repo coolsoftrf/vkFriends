@@ -4,4 +4,6 @@
 
     <string name="pref_key_login" translatable="false">login</string>
     <string name="pref_key_password" translatable="false">password</string>
+    <string name="tag_user_left" translatable="false">user_left</string>
+    <string name="tag_user_right" translatable="false">user_right</string>
 </resources>

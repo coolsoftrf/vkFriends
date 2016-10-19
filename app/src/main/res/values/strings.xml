@@ -99,7 +99,8 @@
     <string name="padding_content_description">Padding view for app bar</string>
     <string name="title_activity_settings">Settings</string>
 
-    <!-- Strings related to Settings -->
+    <string name="label_friends_of">Friends of:</string>
+    <string name="whose_image_description">user photo</string>
 
     <!-- Example General settings -->
     <string name="pref_header_account">Account</string>

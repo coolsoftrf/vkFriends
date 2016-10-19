@@ -40,39 +40,61 @@ public class ImageLoader extends AsyncTaskLoader<String> {
         if (mListener != null){
             mListener.onDownloadStarted();
         }
+        //ToDo: test waiters on long loads:
+        // - at startup
+        // - at rotation
         try {
             String imageUrl = mSource.value();
 
             URL u = new URL(imageUrl);
-            URLConnection connection = u.openConnection();
-            connection.connect();
-            int size = connection.getContentLength();
-
-            DataInputStream stream = new DataInputStream(connection.getInputStream());
-            ReadableByteChannel in = Channels.newChannel(stream);
 
             File targetFile = targetFile(imageUrl);
-            File targetPath = targetFile.getParentFile();
-            if (!targetPath.exists() && !targetPath.mkdirs()){
-                return null;
-            }
-            FileOutputStream fos = new FileOutputStream(targetFile);
-            FileChannel out = fos.getChannel();
+            if (!targetFile.exists()) {
+                URLConnection connection;
+                DataInputStream stream = null;
+                ReadableByteChannel in = null;
+                FileOutputStream fos = null;
+                FileChannel out = null;
 
-            try {
-                int count = 0;
-                Log.i(TAG, "downloading '" + imageUrl + "' to '" + targetFile + "'");
-                while ((count += out.transferFrom(in, count, size - count)) < size){
-                    Log.d(TAG, "bytes transferred " + count + " out of " + size);
+                try {
+                    File targetPath = targetFile.getParentFile();
+                    if (!targetPath.exists() && !targetPath.mkdirs()) {
+                        return null;
+                    }
+
+                    connection = u.openConnection();
+                    connection.connect();
+                    int size = connection.getContentLength();
+
+                    stream = new DataInputStream(connection.getInputStream());
+                    in = Channels.newChannel(stream);
+
+                    fos = new FileOutputStream(targetFile);
+                    out = fos.getChannel();
+
+                    int count = 0;
+                    Log.i(TAG, "downloading '" + imageUrl + "' to '" + targetFile + "'");
+                    while ((count += out.transferFrom(in, count, size - count)) < size) {
+                        Log.d(TAG, "bytes transferred " + count + " out of " + size);
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "error occurred while downloading '" + imageUrl + "' to '" + targetFile + "'", e);
+                    return null;
+                } finally {
+                    if (in != null) {
+                        in.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                    if (fos != null) {
+                        fos.flush();
+                        fos.close();
+                    }
+                    if (stream != null) {
+                        stream.close();
+                    }
                 }
-            } catch (IOException e) {
-                Log.e(TAG, "error occurred while downloading '" + imageUrl + "' to '" + targetFile + "'",  e);
-                return null;
-            } finally {
-                in.close();
-                out.close();
-                fos.flush();
-                fos.close();
             }
             return targetFile.getAbsolutePath();
 

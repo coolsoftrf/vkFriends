@@ -8,9 +8,12 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
@@ -40,16 +43,19 @@ import android.net.Uri;
 
 import java.io.File;
 
+import ru.coolsoft.vkfriends.dummy.DummyContent;
+import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.SharedPreferencesSource;
 
 public class MainActivity extends AppCompatActivity
 implements AppBarLayout.OnOffsetChangedListener
-, NavigationView.OnNavigationItemSelectedListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        , NavigationView.OnNavigationItemSelectedListener
+        , SharedPreferences.OnSharedPreferenceChangeListener
+        , View.OnClickListener
+        , FriendListFragment.OnListFragmentInteractionListener
+{
     private final static String TAG = MainActivity.class.getSimpleName();
-    private final static int LOADER_ID_USER_PHOTO = 1;
-
-    private final static String FIELDS_PHOTO200 = "photo_200";
 
     //main view controls
     private FrameLayout mFl;
@@ -60,7 +66,7 @@ implements AppBarLayout.OnOffsetChangedListener
     private Space mSpace1;
     private Space mSpace2;
 
-    //measuring paramenters
+    //measuring parameters
     private int mTextSizeStart;
     private int mTextSizeEnd;
     private int mAppBarHeight;
@@ -70,6 +76,9 @@ implements AppBarLayout.OnOffsetChangedListener
     private ImageView mAvatar;
     private ProgressBar mWaiter;
     private ProgressBar mPhotoWaiter;
+
+    //data fields
+    private VKApiUser mMe;
 
     //callback handlers
     //Handler mDelayHandler = new Handler();
@@ -94,10 +103,10 @@ implements AppBarLayout.OnOffsetChangedListener
             if (response.parsedModel instanceof VKList){
                 Object o = ((VKList)response.parsedModel).get(0);
                 if (o instanceof VKApiUser){
-                    VKApiUser me = (VKApiUser) o;
+                    mMe = (VKApiUser) o;
                     final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                     final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
-                    final String newName = me.toString();
+                    final String newName = mMe.toString();
 
                     /*===DEBUG DELAY===*/
                     /**
@@ -115,7 +124,7 @@ implements AppBarLayout.OnOffsetChangedListener
                     }
 
                     final String photo = sp.getString(VKFApplication.PREF_KEY_USERPHOTO, null);
-                    final String newPhoto = me.photo_200;
+                    final String newPhoto = mMe.photo_200;
                     if (!newPhoto.equals(photo)){
                         if (editor == null){
                             editor = sp.edit();
@@ -127,6 +136,7 @@ implements AppBarLayout.OnOffsetChangedListener
                         editor.apply();
                     }
 
+                    FriendsData.updateUserData(mMe);
                     mWaiter.setVisibility(View.GONE);
                             /**}
                         }
@@ -152,7 +162,6 @@ implements AppBarLayout.OnOffsetChangedListener
     LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
-            if (id == LOADER_ID_USER_PHOTO){
                 ImageLoader il = new ImageLoader(MainActivity.this
                         , new SharedPreferencesSource(
                             PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
@@ -170,26 +179,23 @@ implements AppBarLayout.OnOffsetChangedListener
                     }
                 });
                 return  il;
-            }
-            return null;
         }
 
         @Override
         public void onLoadFinished(Loader<String> loader, String photoFileName) {
-            if (loader.getId() == LOADER_ID_USER_PHOTO) {
-                if (mAvatar != null) {
-                    if (photoFileName != null){
-                        mAvatar.setImageURI(Uri.fromFile(new File(photoFileName)));
-                    } else {
-                        mAvatar.setImageResource(R.drawable.blue_user_icon);
-                    }
+            if (mAvatar != null) {
+                if (photoFileName != null){
+                    mAvatar.setImageURI(Uri.fromFile(new File(photoFileName)));
+                } else {
+                    mAvatar.setImageResource(R.drawable.blue_user_icon);
                 }
-                mPhotoWaiter.setVisibility(View.GONE);
             }
+            mPhotoWaiter.setVisibility(View.GONE);
         }
 
         @Override
         public void onLoaderReset(Loader<String> loader) {
+            Log.d(TAG, "image loader reset");
         }
     };
 
@@ -200,7 +206,26 @@ implements AppBarLayout.OnOffsetChangedListener
 
         initParams();
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+        if (savedInstanceState != null){
+            mMe = savedInstanceState.getParcelable(VKFApplication.PREF_KEY_ME);
+        }
         initViews();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (outState != null){
+            outState.putParcelable(VKFApplication.PREF_KEY_ME, mMe);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null){
+            mMe = savedInstanceState.getParcelable(VKFApplication.PREF_KEY_ME);
+        }
     }
 
     private void initParams(){
@@ -231,7 +256,7 @@ implements AppBarLayout.OnOffsetChangedListener
             if (VKFApplication.app().isInitialized()){
                 refreshNavigationView();
             } else {
-                getSupportLoaderManager().initLoader(LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
+                getSupportLoaderManager().initLoader(FriendsData.LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
                 requestAccountDetails();
                 VKFApplication.app().setInitialized();
             }
@@ -243,9 +268,21 @@ implements AppBarLayout.OnOffsetChangedListener
         mFl = (FrameLayout) findViewById(R.id.title);
 
         mContactNameLeft = (TextView) findViewById(R.id.name1);
+        if (mContactNameLeft!= null) {
+            mContactNameLeft.setOnClickListener(this);
+        }
         mContactNameRight = (TextView) findViewById(R.id.name2);
+        if (mContactNameRight != null) {
+            mContactNameRight.setOnClickListener(this);
+        }
         mContactImageLeft = (ImageView) findViewById(R.id.avatar1);
+        if (mContactImageLeft != null) {
+            mContactImageLeft.setOnClickListener(this);
+        }
         mContactImageRight = (ImageView) findViewById(R.id.avatar2);
+        if (mContactImageRight != null) {
+            mContactImageRight.setOnClickListener(this);
+        }
         mSpace1 = (Space) findViewById(R.id.spaceAvatar1);
         mSpace2 = (Space) findViewById(R.id.spaceAvatar2);
     }
@@ -310,6 +347,15 @@ implements AppBarLayout.OnOffsetChangedListener
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home){
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (!VKSdk.onActivityResult(requestCode, resultCode, data, mVKAuthCallback)) {
             super.onActivityResult(requestCode, resultCode, data);
@@ -326,13 +372,23 @@ implements AppBarLayout.OnOffsetChangedListener
                 refreshNavigationView();
                 break;
             case VKFApplication.PREF_KEY_USERPHOTO:
-                final Loader ldr = getSupportLoaderManager().getLoader(LOADER_ID_USER_PHOTO);
-                if (ldr != null) {
-                    ldr.onContentChanged();
-                }
+                refreshUserPhoto();
                 break;
             default:
                 break;
+        }
+    }
+
+    private void refreshUserPhoto() {
+        final LoaderManager lm = getSupportLoaderManager();
+        final Loader ldr = lm.getLoader(FriendsData.LOADER_ID_USER_PHOTO);
+
+        //regardless whether we have the loader or not - reinitialize callbacks
+        lm.initLoader(FriendsData.LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
+
+        //but restart loading if we did NOT have it before only
+        if (ldr != null){
+            ldr.onContentChanged();
         }
     }
 
@@ -355,7 +411,9 @@ implements AppBarLayout.OnOffsetChangedListener
         } else {
             mWaiter.setVisibility(View.VISIBLE);
 
-            VKRequest request = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS, FIELDS_PHOTO200));
+            VKRequest request = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS
+                    , TextUtils.join("," , new String[]{ FriendsData.FIELDS_NAME_GEN, FriendsData.FIELDS_PHOTO50, FriendsData.FIELDS_PHOTO200})
+            ));
             Log.d(TAG, "requesting USER data");
             request.executeWithListener(mVKCurrentUserRequestListener);
         }
@@ -380,9 +438,34 @@ implements AppBarLayout.OnOffsetChangedListener
             miLogin.setTitle(name);
         }
 
-        final Loader ldr = getSupportLoaderManager().getLoader(LOADER_ID_USER_PHOTO);
-        if (ldr != null) {
-            ldr.onContentChanged();
+       refreshUserPhoto();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()){
+            case R.id.avatar1:
+            case R.id.name1:
+            case R.id.avatar2:
+            case R.id.name2:
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+
+                FriendListFragment flf = FriendListFragment.newInstance(mMe);
+                ft.add(R.id.container, flf, (String)v.getTag());
+                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                ft.addToBackStack(null);
+
+                ft.commit();
+
+                break;
+            default:
+                break;
         }
+    }
+
+    @Override
+    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+
     }
 }

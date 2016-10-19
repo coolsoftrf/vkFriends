@@ -16,6 +16,8 @@ import com.vk.sdk.VKSdk;
 public class VKFApplication extends Application {
     private static final String TAG = VKFApplication.class.getSimpleName();
 
+    public static final String PREF_KEY_ME = "current_user";
+
     public static final String PREF_KEY_ACCESS_TOKEN = "access_token";
     public static final String PREF_KEY_USERNAME = "user_name";
     public static final String PREF_KEY_USERPHOTO = "user_photo_url";
