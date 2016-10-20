@@ -76,4 +76,19 @@ public class ExampleInstrumentedTest {
 
         //assert full set
     }
+    @Test
+    public void minimize(){
+        //exit by Home button
+        //relaunch by app icon
+
+        //assert full set
+    }
+    @Test
+    public void fragmentMinimize(){
+        //open fragment
+        //exit by Home button
+        //relaunch by app icon
+
+        //assert full set
+    }
 }
