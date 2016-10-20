@@ -1,11 +1,11 @@
-package ru.coolsoft.vkfriends.loaders;
+package ru.coolsoft.vkfriends.loaders.sources;
 
 import android.content.SharedPreferences;
 
 /**
  * Provides a way for Image Loader to get source URL from Shared Preferences
  */
-public class SharedPreferencesSource implements ILoaderSource{
+public class SharedPreferencesSource implements ILoaderSource {
     private String mKey;
     private SharedPreferences mSP;
 

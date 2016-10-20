@@ -15,6 +15,8 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
+import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
+
 /**
  * Loads an image by the URL passed in arguments, saves it into a local file
  * and provides the resulting file name

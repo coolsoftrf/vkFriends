@@ -26,8 +26,8 @@ import ru.coolsoft.vkfriends.FriendsData;
 import ru.coolsoft.vkfriends.R;
 import ru.coolsoft.vkfriends.dummy.DummyContent;
 import ru.coolsoft.vkfriends.dummy.DummyContent.DummyItem;
-import ru.coolsoft.vkfriends.loaders.DatabaseUserImageSource;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
+import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
 
 /**
  * A fragment representing a list of friends to compare in main activity
@@ -52,18 +52,13 @@ public class FriendListFragment extends Fragment {
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
             ImageLoader il = new ImageLoader(FriendListFragment.this.getActivity()
-                    ,//ToDo: make a VkUserObjectImageSource
-                    new DatabaseUserImageSource() {
-                @Override
-                protected int getUserId() {
-                    return mCurrentUser.id;
-                }
-
-                @Override
-                protected String getPhotoFieldName() {
-                    return FriendsData.FIELDS_PHOTO200;
-                }
-            });
+                    , new ILoaderSource() {
+                        @Override
+                        public String value() {
+                            return FriendsData.getCurrentUser().photo_200;
+                        }
+                    }
+            );
             il.setOnDownloadStartedListener(new ImageLoader.OnDownloadStartedListener() {
                 @Override
                 public void onDownloadStarted() {

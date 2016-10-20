@@ -1,6 +1,4 @@
-package ru.coolsoft.vkfriends.loaders;
-
-import android.content.SharedPreferences;
+package ru.coolsoft.vkfriends.loaders.sources;
 
 /**
  * Interface for all loader source types

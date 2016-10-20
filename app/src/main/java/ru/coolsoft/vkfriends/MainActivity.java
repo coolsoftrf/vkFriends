@@ -46,7 +46,7 @@ import java.io.File;
 import ru.coolsoft.vkfriends.dummy.DummyContent;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
-import ru.coolsoft.vkfriends.loaders.SharedPreferencesSource;
+import ru.coolsoft.vkfriends.loaders.sources.SharedPreferencesSource;
 
 public class MainActivity extends AppCompatActivity
 implements AppBarLayout.OnOffsetChangedListener
