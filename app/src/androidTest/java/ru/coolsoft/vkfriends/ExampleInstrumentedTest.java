@@ -23,4 +23,57 @@ public class ExampleInstrumentedTest {
 
         assertEquals("ru.coolsoft.vkfriends", appContext.getPackageName());
     }
+
+    @Test
+    public void main(){
+        //assert navigation view
+        //assert photo @nav
+        //assert name @nav
+        //assert currently selected friends stay the same
+    }
+    @Test
+    public void mainRotate(){
+        //rotate screen
+
+        //assert @main()
+    }
+
+    @Test
+    public void fragment(){
+        //open {first, second} contact by {photo, name}
+
+        //assert photo
+        //assert name gen
+        //assert friend list
+        //assert nav
+    }
+    @Test
+    public void fragmentRotate(){
+        //open fragment, rotate screen
+
+        //assert @fragment()
+    }
+    @Test
+    public void rotateFragment(){
+        //rotate main activity
+        //open fragment
+
+        //assert @fragment()
+    }
+    @Test
+    public void rotateFragmentRotate(){
+        //rotate main activity
+        //open fragment
+        //rotate
+
+        //assert @fragment()
+    }
+
+    @Test
+    public void relaunch(){
+        //exit by Back button
+        //relaunch by app icon
+
+        //assert full set
+    }
 }

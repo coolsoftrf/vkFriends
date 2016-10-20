@@ -77,9 +77,6 @@ implements AppBarLayout.OnOffsetChangedListener
     private ProgressBar mWaiter;
     private ProgressBar mPhotoWaiter;
 
-    //data fields
-    private VKApiUser mMe;
-
     //callback handlers
     //Handler mDelayHandler = new Handler();
     private VKCallback<VKAccessToken> mVKAuthCallback = new VKCallback<VKAccessToken>() {
@@ -103,10 +100,11 @@ implements AppBarLayout.OnOffsetChangedListener
             if (response.parsedModel instanceof VKList){
                 Object o = ((VKList)response.parsedModel).get(0);
                 if (o instanceof VKApiUser){
-                    mMe = (VKApiUser) o;
+                    VKApiUser me = (VKApiUser) o;
+                    FriendsData.setCurrentUser (me);
                     final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                     final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
-                    final String newName = mMe.toString();
+                    final String newName = me.toString();
 
                     /*===DEBUG DELAY===*/
                     /**
@@ -124,7 +122,7 @@ implements AppBarLayout.OnOffsetChangedListener
                     }
 
                     final String photo = sp.getString(VKFApplication.PREF_KEY_USERPHOTO, null);
-                    final String newPhoto = mMe.photo_200;
+                    final String newPhoto = me.photo_200;
                     if (!newPhoto.equals(photo)){
                         if (editor == null){
                             editor = sp.edit();
@@ -136,7 +134,7 @@ implements AppBarLayout.OnOffsetChangedListener
                         editor.apply();
                     }
 
-                    FriendsData.updateUserData(mMe);
+                    FriendsData.updateUserData(me);
                     mWaiter.setVisibility(View.GONE);
                             /**}
                         }
@@ -206,26 +204,8 @@ implements AppBarLayout.OnOffsetChangedListener
 
         initParams();
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
-        if (savedInstanceState != null){
-            mMe = savedInstanceState.getParcelable(VKFApplication.PREF_KEY_ME);
-        }
+
         initViews();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (outState != null){
-            outState.putParcelable(VKFApplication.PREF_KEY_ME, mMe);
-        }
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null){
-            mMe = savedInstanceState.getParcelable(VKFApplication.PREF_KEY_ME);
-        }
     }
 
     private void initParams(){
@@ -451,7 +431,7 @@ implements AppBarLayout.OnOffsetChangedListener
                 FragmentManager fm = getSupportFragmentManager();
                 FragmentTransaction ft = fm.beginTransaction();
 
-                FriendListFragment flf = FriendListFragment.newInstance(mMe);
+                FriendListFragment flf = FriendListFragment.newInstance(FriendsData.getCurrentUser());
                 ft.add(R.id.container, flf, (String)v.getTag());
                 ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                 ft.addToBackStack(null);

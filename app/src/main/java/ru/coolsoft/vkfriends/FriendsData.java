@@ -73,4 +73,12 @@ public class FriendsData {
 
         return user;
     }
+
+    public static void setCurrentUser(VKApiUser me){
+        VKFApplication.app().setMe(me);
+    }
+
+    public static VKApiUser getCurrentUser(){
+        return VKFApplication.app().getMe();
+    }
 }

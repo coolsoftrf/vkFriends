@@ -189,18 +189,20 @@ public class FriendListFragment extends Fragment {
     }
 
     private void refreshTitle() {
-        mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
+        if (mCurrentUser != null) {
+            mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
 
-        //ToDo: extract to a common Delegate
-        final LoaderManager lm = getActivity().getSupportLoaderManager();
-        final Loader ldr = lm.getLoader(FriendsData.LOADER_ID_WHOSE_PHOTO);
+            //ToDo: extract to a common Delegate
+            final LoaderManager lm = getActivity().getSupportLoaderManager();
+            final Loader ldr = lm.getLoader(FriendsData.LOADER_ID_WHOSE_PHOTO);
 
-        //regardless whether we have the loader or not - reinitialize callbacks
-        lm.initLoader(FriendsData.LOADER_ID_WHOSE_PHOTO, null, mUserPhotoLoaderCallback);
+            //regardless whether we have the loader or not - reinitialize callbacks
+            lm.initLoader(FriendsData.LOADER_ID_WHOSE_PHOTO, null, mUserPhotoLoaderCallback);
 
-        //but restart loading if we did NOT have it before only
-        if (ldr != null){
-            ldr.onContentChanged();
+            //but restart loading if we did NOT have it before only
+            if (ldr != null) {
+                ldr.onContentChanged();
+            }
         }
     }
 }

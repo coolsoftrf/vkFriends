@@ -5,4 +5,7 @@
     <dimen name="text_size_small">20sp</dimen>
     <dimen name="avatar_size">100dp</dimen>
     <dimen name="elevation_title">5dp</dimen>
+
+    <!-- image view size is to match photo size -->
+    <dimen name="title_photo_size">200px</dimen>
 </resources>

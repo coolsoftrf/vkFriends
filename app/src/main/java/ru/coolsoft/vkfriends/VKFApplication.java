@@ -8,6 +8,7 @@ import android.util.Log;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.model.VKApiUser;
 
 /**
  * Created by Bobby© on 05.10.2016.
@@ -24,6 +25,7 @@ public class VKFApplication extends Application {
 
     private static VKFApplication mApp;
 
+    private VKApiUser mMe;
     private boolean mInitialized;
     private VKAccessTokenTracker mVKAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
@@ -59,5 +61,13 @@ public class VKFApplication extends Application {
 
     public void setInitialized(){
         mInitialized = true;
+    }
+
+    public VKApiUser getMe() {
+        return mMe;
+    }
+
+    public void setMe(VKApiUser me) {
+        mMe = me;
     }
 }

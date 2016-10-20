@@ -23,12 +23,12 @@ public class DummyContent {
      */
     public static final Map<String, DummyItem> ITEM_MAP = new HashMap<>();
 
-    private static final int COUNT = 25;
+    private static final String PHRASE = "Here be the friends";
 
     static {
-        // Add some sample items.
-        for (int i = 1; i <= COUNT; i++) {
-            addItem(createDummyItem(i));
+        String[] words = PHRASE.split(" ");
+        for (int i = 0; i < words.length; i++) {
+            addItem(createDummyItem(i + 1, words[i]));
         }
     }
 
@@ -37,8 +37,8 @@ public class DummyContent {
         ITEM_MAP.put(item.id, item);
     }
 
-    private static DummyItem createDummyItem(int position) {
-        return new DummyItem(String.valueOf(position), "Item " + position, makeDetails(position));
+    private static DummyItem createDummyItem(int position, String content) {
+        return new DummyItem(String.valueOf(position), content, makeDetails(position));
     }
 
     private static String makeDetails(int position) {
