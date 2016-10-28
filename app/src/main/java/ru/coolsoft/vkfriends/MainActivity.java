@@ -7,13 +7,14 @@ import android.os.Bundle;
 //import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
@@ -31,9 +32,7 @@ import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKApi;
-import com.vk.sdk.api.VKApiConst;
 import com.vk.sdk.api.VKError;
-import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiUser;
@@ -43,7 +42,6 @@ import android.net.Uri;
 
 import java.io.File;
 
-import ru.coolsoft.vkfriends.dummy.DummyContent;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.SharedPreferencesSource;
@@ -366,7 +364,7 @@ implements AppBarLayout.OnOffsetChangedListener
         //regardless whether we have the loader or not - reinitialize callbacks
         lm.initLoader(FriendsData.LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
 
-        //but restart loading if we did NOT have it before only
+        //but restart loading if only we already had it before (have NOT just run it at initialization)
         if (ldr != null){
             ldr.onContentChanged();
         }
@@ -391,9 +389,7 @@ implements AppBarLayout.OnOffsetChangedListener
         } else {
             mWaiter.setVisibility(View.VISIBLE);
 
-            VKRequest request = VKApi.users().get(VKParameters.from(VKApiConst.FIELDS
-                    , TextUtils.join("," , new String[]{ FriendsData.FIELDS_NAME_GEN, FriendsData.FIELDS_PHOTO50, FriendsData.FIELDS_PHOTO200})
-            ));
+            VKRequest request = VKApi.users().get(FriendsData.PARAMS_USER_DETAILS);
             Log.d(TAG, "requesting USER data");
             request.executeWithListener(mVKCurrentUserRequestListener);
         }
@@ -445,7 +441,11 @@ implements AppBarLayout.OnOffsetChangedListener
     }
 
     @Override
-    public void onListFragmentInteraction(DummyContent.DummyItem item) {
-
+    public void onListFragmentInteraction(String fragmentTag, String itemId) {
+        //ToDo: change appropriate friend's photo and name
+        CoordinatorLayout coordinator = (CoordinatorLayout) findViewById(R.id.coordinator);
+        if (coordinator != null) {
+            Snackbar.make(coordinator, itemId + " selected as " + fragmentTag, Snackbar.LENGTH_SHORT).show();
+        }
     }
 }

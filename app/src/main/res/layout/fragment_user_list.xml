@@ -38,15 +38,42 @@
         </FrameLayout>
     </android.support.v7.widget.Toolbar>
 
-    <android.support.v7.widget.RecyclerView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/list"
-        android:name="ru.coolsoft.vkfriends.FriendListFragment"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutManager="LinearLayoutManager"
-        tools:context=".fragments.FriendListFragment"
-        tools:listitem="@layout/fragment_user" />
+        android:layout_height="match_parent">
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/list"
+            android:name="ru.coolsoft.vkfriends.FriendListFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            tools:context=".fragments.FriendListFragment"
+            tools:listitem="@layout/fragment_user" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/stage_layout"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="@dimen/text_margin"
+            android:visibility="gone"
+            >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/stage_name"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceListItem"
+                />
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/stage_progress"
+                android:layout_below="@id/stage_name"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                />
+        </RelativeLayout>
+
+    </FrameLayout>
 </LinearLayout>

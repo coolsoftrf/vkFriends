@@ -1,6 +1,7 @@
 package ru.coolsoft.vkfriends.fragments;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,6 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.vk.sdk.api.model.VKApiUser;
 
@@ -24,10 +27,11 @@ import java.io.File;
 
 import ru.coolsoft.vkfriends.FriendsData;
 import ru.coolsoft.vkfriends.R;
-import ru.coolsoft.vkfriends.dummy.DummyContent;
-import ru.coolsoft.vkfriends.dummy.DummyContent.DummyItem;
+import ru.coolsoft.vkfriends.db.FriendsContract;
+import ru.coolsoft.vkfriends.loaders.FriendListLoader;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
+import ru.coolsoft.vkfriends.widget.SimpleRecyclerViewCursorAdapter;
 
 /**
  * A fragment representing a list of friends to compare in main activity
@@ -36,8 +40,8 @@ import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
  * interface.
  */
 public class FriendListFragment extends Fragment {
-
     private static final String ARG_ROOT_USER = "root-user";
+    private static final String USERS_TABLE_ALIAS = "u";
     private OnListFragmentInteractionListener mListener;
 
     private VKApiUser mCurrentUser;
@@ -47,11 +51,17 @@ public class FriendListFragment extends Fragment {
     private ImageView mAvatar;
     private Toolbar mToolbar;
 
+    private TextView mStageName;
+    private ProgressBar mStageProgress;
+    private RelativeLayout mStageLayout;
+
+    private SimpleRecyclerViewCursorAdapter mCursorAdapter;
+
     LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         //ToDo: extract to a common Delegate for all the loadable images
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
-            ImageLoader il = new ImageLoader(FriendListFragment.this.getActivity()
+            ImageLoader il = new ImageLoader(getActivity()
                     , new ILoaderSource() {
                         @Override
                         public String value() {
@@ -92,6 +102,57 @@ public class FriendListFragment extends Fragment {
         }
     };
 
+    LoaderManager.LoaderCallbacks<Cursor> mFriendlistLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new FriendListLoader(
+                    getActivity()
+                    , new ILoaderSource() {
+                        @Override
+                        public String value() {
+                            return String.valueOf(mCurrentUser.id);
+                        }
+                    }
+                    , new FriendListLoader.ICursorProvider() {
+                        @Override
+                        public Cursor getCursor(String userId, String[] projection) {
+                            return FriendsData.getFriendsOf(userId, USERS_TABLE_ALIAS, projection);
+                        }
+                    }
+                    , new FriendListLoader.IProgressListener() {
+                        @Override
+                        public void onProgressUpdate(final int stageResourceId, final long progress, final long total) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mStageName.setText(stageResourceId);
+
+                                    mStageProgress.setProgress((int) (progress * mStageProgress.getMax() / total));
+                                    //FixMe: progress layout doesn't show up at second and further fragment invocations
+                                    mStageLayout.setVisibility(View.VISIBLE);
+                                }
+                            });
+                        }
+                    }
+
+                    , USERS_TABLE_ALIAS + "." + FriendsContract.Users._ID + " AS " + FriendsContract.Users._ID
+                    , FriendsContract.Users.COLUMN_USER_NAME
+                    , FriendsContract.Users.COLUMN_USER_PHOTO200
+            );
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            mCursorAdapter.changeCursor(cursor);
+            mStageLayout.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
+    };
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -99,7 +160,6 @@ public class FriendListFragment extends Fragment {
     public FriendListFragment() {
     }
 
-    // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
     public static FriendListFragment newInstance(VKApiUser user) {
         FriendListFragment fragment = new FriendListFragment();
@@ -138,16 +198,46 @@ public class FriendListFragment extends Fragment {
                 }
             }
         }
-        refreshTitle();
-        //ToDo: start friend list loader
+
+        mStageName = (TextView) view.findViewById(R.id.stage_name);
+        mStageProgress = (ProgressBar) view.findViewById(R.id.stage_progress);
+        mStageLayout = (RelativeLayout) view.findViewById(R.id.stage_layout);
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
         if (recyclerView != null) {
             Context context = view.getContext();
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new FriendsRecyclerViewAdapter(DummyContent.ITEMS, mListener));
+
+            final String[][] from = {{
+                    FriendsContract.Users._ID
+                    , FriendsContract.Users.COLUMN_USER_NAME
+                    , FriendsContract.Users.COLUMN_USER_PHOTO200
+            }};
+            final int[][] to = {{
+                    R.id.friend_layout, R.id.friend_name, R.id.friend_photo
+            }};
+
+            mCursorAdapter = new SimpleRecyclerViewCursorAdapter(
+                    null
+                    , from, to
+                    , new int[]{R.layout.fragment_user}
+                    , new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Object tag = v.getTag();
+                            if (tag != null && tag instanceof String) {
+                                mListener.onListFragmentInteraction(getTag(), (String) tag);
+                                getFragmentManager().popBackStack();
+                            }
+                        }
+                    }
+            );
+            recyclerView.setAdapter(mCursorAdapter);
         }
+
+        refreshTitle();
+
         return view;
     }
 
@@ -168,6 +258,31 @@ public class FriendListFragment extends Fragment {
         mListener = null;
     }
 
+    private void refreshTitle() {
+        if (mCurrentUser != null) {
+            mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
+
+            //ToDo: extract to a common Delegate
+            final LoaderManager lm = getActivity().getSupportLoaderManager();
+            Loader ldr = lm.getLoader(FriendsData.LOADER_ID_WHOSE_PHOTO);
+
+            //regardless whether we have the loader or not - reinitialize callbacks
+            lm.initLoader(FriendsData.LOADER_ID_WHOSE_PHOTO, null, mUserPhotoLoaderCallback);
+
+            //but restart loading if only we already had it before (have NOT just run it at initialization)
+            if (ldr != null) {
+                ldr.onContentChanged();
+            }
+
+            //start friend list loader
+            ldr = lm.getLoader(FriendsData.LOADER_ID_FRIEND_LIST);
+            lm.initLoader(FriendsData.LOADER_ID_FRIEND_LIST, null, mFriendlistLoaderCallback);
+            if (ldr != null){
+                ldr.onContentChanged();
+            }
+        }
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -179,25 +294,6 @@ public class FriendListFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item);
-    }
-
-    private void refreshTitle() {
-        if (mCurrentUser != null) {
-            mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
-
-            //ToDo: extract to a common Delegate
-            final LoaderManager lm = getActivity().getSupportLoaderManager();
-            final Loader ldr = lm.getLoader(FriendsData.LOADER_ID_WHOSE_PHOTO);
-
-            //regardless whether we have the loader or not - reinitialize callbacks
-            lm.initLoader(FriendsData.LOADER_ID_WHOSE_PHOTO, null, mUserPhotoLoaderCallback);
-
-            //but restart loading if we did NOT have it before only
-            if (ldr != null) {
-                ldr.onContentChanged();
-            }
-        }
+        void onListFragmentInteraction(String fragmentTag, String itemId);
     }
 }
