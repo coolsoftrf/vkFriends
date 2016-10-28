@@ -26,6 +26,8 @@ public class VKFApplication extends Application {
     private static VKFApplication mApp;
 
     private VKApiUser mMe;
+    private VKApiUser mUserLeft;
+    private VKApiUser mUserRight;
     private boolean mInitialized;
     private VKAccessTokenTracker mVKAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
@@ -66,8 +68,21 @@ public class VKFApplication extends Application {
     public VKApiUser getMe() {
         return mMe;
     }
-
     public void setMe(VKApiUser me) {
         mMe = me;
+    }
+
+    public VKApiUser getLeft() {
+        return mUserLeft;
+    }
+    public void setLeft(VKApiUser left) {
+        mUserLeft = left;
+    }
+
+    public VKApiUser getRight() {
+        return mUserRight;
+    }
+    public void setRight(VKApiUser right) {
+        mUserRight = right;
     }
 }

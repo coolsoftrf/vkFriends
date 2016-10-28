@@ -93,4 +93,6 @@ public class ExampleInstrumentedTest {
     }
 
     //waiters at rotation
+
+    //stage progress at rotation
 }

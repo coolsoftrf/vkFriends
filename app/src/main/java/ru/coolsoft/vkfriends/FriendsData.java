@@ -22,8 +22,10 @@ import ru.coolsoft.vkfriends.db.FriendsDbHelper;
  * Data manager for VK users
  */
 public class FriendsData {
-    public final static String FIELDS_PHOTO200 = VKApiUser.FIELD_PHOTO_200;
+    public final static String FIELDS_ID = "id";
+    public final static String FIELDS_NAME = "first_name";
     public final static String FIELDS_NAME_GEN = "first_name_gen";
+    public final static String FIELDS_PHOTO200 = VKApiUser.FIELD_PHOTO_200;
 
     public final static VKParameters PARAMS_USER_DETAILS = VKParameters.from(VKApiConst.FIELDS
             , TextUtils.join("," , new String[]{ FriendsData.FIELDS_NAME_GEN, FriendsData.FIELDS_PHOTO200})
@@ -60,8 +62,8 @@ public class FriendsData {
         db().replace(FriendsContract.Friends.TABLE_NAME, null, values);
     }
 
-    public static VKApiUser getUser(int id, String ... fieldNames) {
-        Cursor c = db().query(FriendsContract.Users.TABLE_NAME, fieldNames
+    public static VKApiUser getUser(String id, String[] dbFieldNames, String[] objFieldNames) {
+        Cursor c = db().query(FriendsContract.Users.TABLE_NAME, dbFieldNames
                 , FriendsContract.Users._ID + " = ?", new String[]{String.valueOf(id)}
                 , null, null, null);
 
@@ -71,8 +73,8 @@ public class FriendsData {
                 c.moveToFirst();
 
                 Map<String, String> mapFields = new HashMap<>();
-                for (int i = 0; i < fieldNames.length; i++) {
-                    mapFields.put(fieldNames[i], c.getString(i));
+                for (int i = 0; i < dbFieldNames.length && i < objFieldNames.length; i++) {
+                    mapFields.put(objFieldNames[i], c.getString(i));
                 }
 
                 JSONObject fields = new JSONObject(mapFields);
@@ -87,14 +89,6 @@ public class FriendsData {
         return user;
     }
 
-    public static void setCurrentUser(VKApiUser me){
-        VKFApplication.app().setMe(me);
-    }
-
-    public static VKApiUser getCurrentUser(){
-        return VKFApplication.app().getMe();
-    }
-
     public static Cursor getFriendsOf(String userId, String usersTableAlias, String... columns){
         return db().rawQuery("SELECT " + TextUtils.join(", ", columns) + " FROM "
                 + FriendsContract.Users.TABLE_NAME + " " + usersTableAlias + " INNER JOIN "
@@ -105,5 +99,26 @@ public class FriendsData {
 
                 , new String[]{userId}
         );
+    }
+
+    public static void setCurrentUser(VKApiUser me){
+        VKFApplication.app().setMe(me);
+    }
+    public static VKApiUser getCurrentUser(){
+        return VKFApplication.app().getMe();
+    }
+
+    public static void setLeftUser(VKApiUser left){
+        VKFApplication.app().setLeft(left);
+    }
+    public static VKApiUser getLeftUser(){
+        return VKFApplication.app().getLeft();
+    }
+
+    public static void setRightUser(VKApiUser right){
+        VKFApplication.app().setRight(right);
+    }
+    public static VKApiUser getRightUser(){
+        return VKFApplication.app().getRight();
     }
 }

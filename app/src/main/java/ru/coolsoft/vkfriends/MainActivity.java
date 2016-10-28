@@ -6,10 +6,9 @@ import android.content.res.TypedArray;
 import android.os.Bundle;
 //import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.IntDef;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
@@ -41,7 +40,10 @@ import com.vk.sdk.api.model.VKList;
 import android.net.Uri;
 
 import java.io.File;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
+import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.SharedPreferencesSource;
@@ -54,6 +56,14 @@ implements AppBarLayout.OnOffsetChangedListener
         , FriendListFragment.OnListFragmentInteractionListener
 {
     private final static String TAG = MainActivity.class.getSimpleName();
+
+    @IntDef(value = {FLAG_LEFT, FLAG_RIGHT},
+            flag = true
+    )
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Side{}
+    private final static int FLAG_LEFT = 1;
+    private final static int FLAG_RIGHT = 2;
 
     //main view controls
     private FrameLayout mFl;
@@ -248,7 +258,7 @@ implements AppBarLayout.OnOffsetChangedListener
         mFl = (FrameLayout) findViewById(R.id.title);
 
         mContactNameLeft = (TextView) findViewById(R.id.name1);
-        if (mContactNameLeft!= null) {
+        if (mContactNameLeft != null) {
             mContactNameLeft.setOnClickListener(this);
         }
         mContactNameRight = (TextView) findViewById(R.id.name2);
@@ -263,6 +273,8 @@ implements AppBarLayout.OnOffsetChangedListener
         if (mContactImageRight != null) {
             mContactImageRight.setOnClickListener(this);
         }
+        updateUsers(FLAG_LEFT | FLAG_RIGHT);
+
         mSpace1 = (Space) findViewById(R.id.spaceAvatar1);
         mSpace2 = (Space) findViewById(R.id.spaceAvatar2);
     }
@@ -445,10 +457,40 @@ implements AppBarLayout.OnOffsetChangedListener
 
     @Override
     public void onListFragmentInteraction(String fragmentTag, String itemId) {
-        //ToDo: change appropriate friend's photo and name
-        CoordinatorLayout coordinator = (CoordinatorLayout) findViewById(R.id.coordinator);
-        if (coordinator != null) {
-            Snackbar.make(coordinator, itemId + " selected as " + fragmentTag, Snackbar.LENGTH_SHORT).show();
+        //change appropriate friend's photo and name
+        VKApiUser user = FriendsData.getUser(itemId
+                , new String[]{
+                        FriendsContract.Users._ID
+                        , FriendsContract.Users.COLUMN_USER_NAME
+                        , FriendsContract.Users.COLUMN_USER_PHOTO200}
+                , new String[]{
+                        FriendsData.FIELDS_ID
+                        , FriendsData.FIELDS_NAME
+                        , FriendsData.FIELDS_PHOTO200
+                });
+        if (fragmentTag.equals(getString(R.string.tag_user_left))){
+            FriendsData.setLeftUser(user);
+            updateUsers(FLAG_LEFT);
+        } else if (fragmentTag.equals(getString(R.string.tag_user_right))){
+            FriendsData.setRightUser(user);
+            updateUsers(FLAG_RIGHT);
+        }
+    }
+
+    private void updateUsers(@Side int side){
+        if ((side & FLAG_LEFT) > 0){
+            VKApiUser left = FriendsData.getLeftUser();
+            if (left != null) {
+                mContactNameLeft.setText(left.first_name);
+                //ToDo: start left user avatar loader
+            }
+        }
+        if ((side & FLAG_RIGHT) > 0){
+            VKApiUser right = FriendsData.getRightUser();
+            if (right != null) {
+                mContactNameRight.setText(right.first_name);
+                //ToDo: start right user avatar loader
+            }
         }
     }
 }
