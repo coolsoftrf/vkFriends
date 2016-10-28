@@ -4,8 +4,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
+//import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
@@ -44,8 +45,8 @@ public class FriendListFragment extends Fragment {
     private static final String USERS_TABLE_ALIAS = "u";
     private OnListFragmentInteractionListener mListener;
 
-    private VKApiUser mCurrentUser;
-    Handler mHandler = new Handler();
+    VKApiUser mCurrentUser;
+    //private Handler mHandler = new Handler();
 
     private ProgressBar mPhotoWaiter;
     private ImageView mAvatar;
@@ -57,7 +58,26 @@ public class FriendListFragment extends Fragment {
 
     private SimpleRecyclerViewCursorAdapter mCursorAdapter;
 
-    LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
+    private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
+        @Override
+        public void onDownloadStarted() {
+            /*^*/
+            FragmentActivity activity = getActivity();
+            if (activity != null)
+                activity.runOnUiThread(
+            /*/
+                mHandler.post(
+            /*$*/
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                mPhotoWaiter.setVisibility(View.VISIBLE);
+                            }
+                        }
+                );
+        }
+    };
+    private LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         //ToDo: extract to a common Delegate for all the loadable images
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
@@ -69,19 +89,8 @@ public class FriendListFragment extends Fragment {
                         }
                     }
             );
-            il.setOnDownloadStartedListener(new ImageLoader.OnDownloadStartedListener() {
-                @Override
-                public void onDownloadStarted() {
-                    mHandler.post(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                mPhotoWaiter.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    );
-                }
-            });
+
+            il.setOnDownloadStartedListener(mDownloadStartedListener);
             return  il;
         }
 
@@ -102,10 +111,40 @@ public class FriendListFragment extends Fragment {
         }
     };
 
-    LoaderManager.LoaderCallbacks<Cursor> mFriendlistLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
+    private FriendListLoader.IProgressListener mProgressListener = new FriendListLoader.IProgressListener() {
+        @Override
+        public void onProgressUpdate(final int stageResourceId, final long progress, final long total) {
+            /*^*/
+            FragmentActivity activity = getActivity();
+            if (activity != null)
+                activity.runOnUiThread(
+            /*/
+                mHandler.post(
+            /*$*/
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                CharSequence text = getText(stageResourceId);
+                                mStageName.setText(text);
+
+                                int percentage = (int) (progress * mStageProgress.getMax() / total);
+                                mStageProgress.setProgress(percentage);
+                                //FixMe: progress layout doesn't show up at second and further fragment invocations
+                                /**
+                                 * The only case when reloading successfully restarts is
+                                 * if we minimize the application at horizontal orientation
+                                 * and then rotate the device again into vertical state
+                                 * and then reopen the app
+                                 */
+                                mStageLayout.setVisibility(View.VISIBLE);
+                            }
+                        });
+        }
+    };
+    private LoaderManager.LoaderCallbacks<Cursor> mFriendlistLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new FriendListLoader(
+            FriendListLoader fll = new FriendListLoader(
                     getActivity()
                     , new ILoaderSource() {
                         @Override
@@ -119,26 +158,13 @@ public class FriendListFragment extends Fragment {
                             return FriendsData.getFriendsOf(userId, USERS_TABLE_ALIAS, projection);
                         }
                     }
-                    , new FriendListLoader.IProgressListener() {
-                        @Override
-                        public void onProgressUpdate(final int stageResourceId, final long progress, final long total) {
-                            mHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mStageName.setText(stageResourceId);
-
-                                    mStageProgress.setProgress((int) (progress * mStageProgress.getMax() / total));
-                                    //FixMe: progress layout doesn't show up at second and further fragment invocations
-                                    mStageLayout.setVisibility(View.VISIBLE);
-                                }
-                            });
-                        }
-                    }
 
                     , USERS_TABLE_ALIAS + "." + FriendsContract.Users._ID + " AS " + FriendsContract.Users._ID
                     , FriendsContract.Users.COLUMN_USER_NAME
                     , FriendsContract.Users.COLUMN_USER_PHOTO200
             );
+            fll.registerProgressListener(mProgressListener);
+            return fll;
         }
 
         @Override
@@ -167,6 +193,17 @@ public class FriendListFragment extends Fragment {
         args.putParcelable(ARG_ROOT_USER, user);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnListFragmentInteractionListener) {
+            mListener = (OnListFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnListFragmentInteractionListener");
+        }
     }
 
     @Override
@@ -236,20 +273,10 @@ public class FriendListFragment extends Fragment {
             recyclerView.setAdapter(mCursorAdapter);
         }
 
-        refreshTitle();
+        refreshTitle(savedInstanceState == null);
 
         return view;
-    }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnListFragmentInteractionListener) {
-            mListener = (OnListFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnListFragmentInteractionListener");
-        }
     }
 
     @Override
@@ -258,7 +285,7 @@ public class FriendListFragment extends Fragment {
         mListener = null;
     }
 
-    private void refreshTitle() {
+    private void refreshTitle(boolean reload) {
         if (mCurrentUser != null) {
             mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
 
@@ -271,14 +298,20 @@ public class FriendListFragment extends Fragment {
 
             //but restart loading if only we already had it before (have NOT just run it at initialization)
             if (ldr != null) {
-                ldr.onContentChanged();
+                ((ImageLoader) ldr).setOnDownloadStartedListener(mDownloadStartedListener);
+                if (reload) {
+                    ldr.onContentChanged();
+                }
             }
 
             //start friend list loader
             ldr = lm.getLoader(FriendsData.LOADER_ID_FRIEND_LIST);
             lm.initLoader(FriendsData.LOADER_ID_FRIEND_LIST, null, mFriendlistLoaderCallback);
             if (ldr != null){
-                ldr.onContentChanged();
+                ((FriendListLoader)ldr).registerProgressListener(mProgressListener);
+                if (reload) {
+                    ldr.onContentChanged();
+                }
             }
         }
     }

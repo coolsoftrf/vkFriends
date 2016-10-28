@@ -155,7 +155,18 @@ implements AppBarLayout.OnOffsetChangedListener
         }
     };
 
-    LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
+    private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
+        @Override
+        public void onDownloadStarted() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mPhotoWaiter.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+    };
+    private LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
                 ImageLoader il = new ImageLoader(MainActivity.this
@@ -163,17 +174,8 @@ implements AppBarLayout.OnOffsetChangedListener
                             PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
                             , VKFApplication.PREF_KEY_USERPHOTO
                 ));
-                il.setOnDownloadStartedListener(new ImageLoader.OnDownloadStartedListener() {
-                    @Override
-                    public void onDownloadStarted() {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mPhotoWaiter.setVisibility(View.VISIBLE);
-                            }
-                        });
-                    }
-                });
+
+            il.setOnDownloadStartedListener(mDownloadStartedListener);
                 return  il;
         }
 
@@ -366,6 +368,7 @@ implements AppBarLayout.OnOffsetChangedListener
 
         //but restart loading if only we already had it before (have NOT just run it at initialization)
         if (ldr != null){
+            ((ImageLoader)ldr).setOnDownloadStartedListener(mDownloadStartedListener);
             ldr.onContentChanged();
         }
     }
@@ -428,11 +431,11 @@ implements AppBarLayout.OnOffsetChangedListener
                 FragmentTransaction ft = fm.beginTransaction();
 
                 FriendListFragment flf = FriendListFragment.newInstance(FriendsData.getCurrentUser());
-                ft.add(R.id.container, flf, (String)v.getTag());
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                ft.addToBackStack(null);
-
-                ft.commit();
+                //flf.setRetainInstance(true);
+                ft.add(R.id.container, flf, (String)v.getTag())
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                        .addToBackStack(null)
+                        .commit();
 
                 break;
             default:

@@ -28,7 +28,7 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     public interface OnDownloadStartedListener{
         void onDownloadStarted();
     }
-    OnDownloadStartedListener mListener;
+    private OnDownloadStartedListener mListener;
 
     //// constructor ////
     public ImageLoader(Context context, ILoaderSource source) {

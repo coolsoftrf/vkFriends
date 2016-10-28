@@ -38,16 +38,23 @@ public class FriendListLoader extends CursorLoader {
     //String mSortOrder;
 
     public FriendListLoader(Context context, ILoaderSource userIdSource
-            , ICursorProvider cursorProvider, IProgressListener progressListener
-            , String... projection) {
+            , ICursorProvider cursorProvider, String... projection) {
         super(context);
         mProjection = projection;
         //mSortOrder = sortOrder;
         mSource = userIdSource;
         mCursorProvider = cursorProvider;
+    }
+
+    public void registerProgressListener(IProgressListener progressListener){
         mProgressListener = progressListener;
     }
 
+    private void publishProgress(int stageResourceId, long progress, long total){
+        if (mProgressListener != null){
+            mProgressListener.onProgressUpdate(stageResourceId, progress, total);
+        }
+    }
     @Override
     public Cursor loadInBackground() {
         final String userId = mSource.value();
@@ -57,7 +64,7 @@ public class FriendListLoader extends CursorLoader {
         VKRequest getFriends = VKApi.friends().get(params);
 
         final VKUsersArray[] friends = new VKUsersArray[]{null};
-        mProgressListener.onProgressUpdate(R.string.stage_downloading, 0, 1);
+        publishProgress(R.string.stage_downloading, 0, 1);
         getFriends.executeSyncWithListener(new VKRequest.VKRequestListener() {
             @Override
             public void onComplete(VKResponse response) {
@@ -68,7 +75,7 @@ public class FriendListLoader extends CursorLoader {
 
             @Override
             public void onProgress(VKRequest.VKProgressType progressType, long bytesLoaded, long bytesTotal) {
-                mProgressListener.onProgressUpdate(R.string.stage_downloading, bytesLoaded, bytesTotal);
+                publishProgress(R.string.stage_downloading, bytesLoaded, bytesTotal);
             }
         });
         if (friends[0] == null) {
@@ -76,7 +83,7 @@ public class FriendListLoader extends CursorLoader {
         }
 
         //query current users
-        mProgressListener.onProgressUpdate(R.string.stage_collecting, 0, 1);
+        publishProgress(R.string.stage_collecting, 0, 1);
         final String uAlias = "u";
         Cursor curFriends = FriendsData.getFriendsOf(userId, uAlias
                 , uAlias + "." + FriendsContract.Friends._ID
@@ -91,7 +98,7 @@ public class FriendListLoader extends CursorLoader {
                 curFriends.moveToFirst();
                 do {
                     mapCurrentFriends.put(curFriends.getString(0), curFriends.getString(1));
-                    mProgressListener.onProgressUpdate(R.string.stage_collecting, ++index, count);
+                    publishProgress(R.string.stage_collecting, ++index, count);
                     curFriends.moveToNext();
                 } while (!curFriends.isLast());
             }
@@ -102,7 +109,7 @@ public class FriendListLoader extends CursorLoader {
         index = 0;
         //ToDo: update activity flag
         for (VKApiUserFull user : friends[0]) {
-            mProgressListener.onProgressUpdate(R.string.stage_organizing, index++, friends[0].size());
+            publishProgress(R.string.stage_organizing, index++, friends[0].size());
 
             final String strUserId = String.valueOf(user.id);
             final boolean matches;
