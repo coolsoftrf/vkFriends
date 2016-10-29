@@ -114,7 +114,7 @@ implements AppBarLayout.OnOffsetChangedListener
                     final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
                     final String newName = me.toString();
 
-                    /*===DEBUG DELAY===*/
+                    /*=== DEBUG DELAY ===*/
                     /**
                     final boolean posted = mDelayHandler.postDelayed(
                         new Runnable() {

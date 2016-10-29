@@ -114,9 +114,23 @@ public class ImageLoader extends AsyncTaskLoader<String> {
             return;
         }
 
-        File targetFile = targetFile(imageUrl);
+        final File targetFile = targetFile(imageUrl);
         if (targetFile.exists()){
-            deliverResult(targetFile.getAbsolutePath());
+            /*=== DEBUG DELAY ===*
+            if (mListener != null){
+                mListener.onDownloadStarted();
+            }
+            new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                    /*=== PERMANENT CODE START ===*/
+                        deliverResult(targetFile.getAbsolutePath());
+                    /*=== PERMANENT CODE END ===*
+                    }
+                }
+                , 3000
+            );
+            /*=== END of DELAY ===*/
             return;
         }
 
@@ -127,7 +141,6 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     public void setOnDownloadStartedListener (OnDownloadStartedListener listener){
         mListener = listener;
     }
-
 
     //// supplementary methods ////
     private File targetFile(@NonNull String imageUrl){

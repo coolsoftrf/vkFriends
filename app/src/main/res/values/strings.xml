@@ -104,6 +104,7 @@
     <string name="friend_image_description">friend\'s photo</string>
 
     <!-- Listeners related strings -->
+    <!--<string name="stage_delay">Delay simulation…</string>-->
     <string name="stage_downloading">Downloading…</string>
     <string name="stage_collecting">Collecting existing data…</string>
     <string name="stage_organizing">Organising new data…</string>

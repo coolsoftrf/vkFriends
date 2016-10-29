@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,10 +43,16 @@ import ru.coolsoft.vkfriends.widget.SimpleRecyclerViewCursorAdapter;
  */
 public class FriendListFragment extends Fragment {
     private static final String ARG_ROOT_USER = "root-user";
+    private static final String ARG_PHOTO_PROGRESS = "photo-progress";
+    private static final String ARG_STAGE_ID = "stage-id";
+    private static final String ARG_STAGE_PROGRESS = "stage-progress";
     private static final String USERS_TABLE_ALIAS = "u";
-    private OnListFragmentInteractionListener mListener;
+    private static final int PROGRESS_TOTAL = 100;
 
     VKApiUser mCurrentUser;
+    boolean mLastPhotoProgress = false;
+    int mLastStageId = FriendsData.Invalid.RESOURCE;
+    int mLastStagePercentage = FriendsData.Invalid.PROGRESS;
     //private Handler mHandler = new Handler();
 
     private ProgressBar mPhotoWaiter;
@@ -57,10 +64,12 @@ public class FriendListFragment extends Fragment {
     private RelativeLayout mStageLayout;
 
     private SimpleRecyclerViewCursorAdapter mCursorAdapter;
+    private OnListFragmentInteractionListener mListener;
 
     private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
         @Override
         public void onDownloadStarted() {
+            mLastPhotoProgress = true;
             /*^*/
             FragmentActivity activity = getActivity();
             if (activity != null)
@@ -96,6 +105,7 @@ public class FriendListFragment extends Fragment {
 
         @Override
         public void onLoadFinished(Loader<String> loader, String photoFileName) {
+            mLastPhotoProgress = false;
             if (mAvatar != null) {
                 if (photoFileName != null){
                     mAvatar.setImageURI(Uri.fromFile(new File(photoFileName)));
@@ -113,7 +123,12 @@ public class FriendListFragment extends Fragment {
 
     private FriendListLoader.IProgressListener mProgressListener = new FriendListLoader.IProgressListener() {
         @Override
-        public void onProgressUpdate(final int stageResourceId, final long progress, final long total) {
+        public void onProgressUpdate(final int stageResourceId, long progress, long total) {
+            final int percentage = (int) (progress * PROGRESS_TOTAL / total);
+            mLastStageId = stageResourceId;
+            mLastStagePercentage = percentage;
+
+            //ToDo: Extract into a parametrized handler
             /*^*/
             FragmentActivity activity = getActivity();
             if (activity != null)
@@ -124,19 +139,15 @@ public class FriendListFragment extends Fragment {
                         new Runnable() {
                             @Override
                             public void run() {
-                                CharSequence text = getText(stageResourceId);
-                                mStageName.setText(text);
+                                try {
+                                    CharSequence text = getText(stageResourceId);
+                                    mStageName.setText(text);
 
-                                int percentage = (int) (progress * mStageProgress.getMax() / total);
-                                mStageProgress.setProgress(percentage);
-                                //FixMe: progress layout doesn't show up at second and further fragment invocations
-                                /**
-                                 * The only case when reloading successfully restarts is
-                                 * if we minimize the application at horizontal orientation
-                                 * and then rotate the device again into vertical state
-                                 * and then reopen the app
-                                 */
-                                mStageLayout.setVisibility(View.VISIBLE);
+                                    mStageProgress.setProgress(percentage);
+                                    mStageLayout.setVisibility(View.VISIBLE);
+                                } catch (IllegalStateException e){
+                                    Log.w("FLF:onProgressUpdate", "Activity detached unexpectedly", e);
+                                }
                             }
                         });
         }
@@ -169,6 +180,9 @@ public class FriendListFragment extends Fragment {
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            mLastStageId = FriendsData.Invalid.RESOURCE;
+            mLastStagePercentage = FriendsData.Invalid.PROGRESS;
+
             mCursorAdapter.changeCursor(cursor);
             mStageLayout.setVisibility(View.GONE);
         }
@@ -213,6 +227,11 @@ public class FriendListFragment extends Fragment {
         if (getArguments() != null) {
             mCurrentUser = getArguments().getParcelable(ARG_ROOT_USER);
         }
+        if (savedInstanceState != null) {
+            mLastPhotoProgress = savedInstanceState.getBoolean(ARG_PHOTO_PROGRESS, false);
+            mLastStageId = savedInstanceState.getInt(ARG_STAGE_ID, FriendsData.Invalid.RESOURCE);
+            mLastStagePercentage = savedInstanceState.getInt(ARG_STAGE_PROGRESS, FriendsData.Invalid.PROGRESS);
+        }
     }
 
     @Override
@@ -221,6 +240,9 @@ public class FriendListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_user_list, container, false);
 
         mPhotoWaiter = (ProgressBar) view.findViewById(R.id.user_photo_waiter);
+        if (mLastPhotoProgress){
+            mPhotoWaiter.setVisibility(View.VISIBLE);
+        }
         mAvatar = (ImageView) view.findViewById(R.id.user_image);
 
         mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
@@ -239,6 +261,9 @@ public class FriendListFragment extends Fragment {
         mStageName = (TextView) view.findViewById(R.id.stage_name);
         mStageProgress = (ProgressBar) view.findViewById(R.id.stage_progress);
         mStageLayout = (RelativeLayout) view.findViewById(R.id.stage_layout);
+        if (mLastStageId != FriendsData.Invalid.RESOURCE){
+            mProgressListener.onProgressUpdate(mLastStageId, mLastStagePercentage, PROGRESS_TOTAL);
+        }
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
@@ -277,6 +302,21 @@ public class FriendListFragment extends Fragment {
 
         return view;
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        if (mLastPhotoProgress){
+            outState.putBoolean(ARG_PHOTO_PROGRESS, true);
+        }
+        if (mLastStageId != FriendsData.Invalid.RESOURCE){
+            outState.putInt(ARG_STAGE_ID, mLastStageId);
+        }
+        if (mLastStagePercentage != FriendsData.Invalid.PROGRESS){
+            outState.putInt(ARG_STAGE_PROGRESS, mLastStagePercentage);
+        }
     }
 
     @Override

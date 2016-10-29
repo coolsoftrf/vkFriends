@@ -63,8 +63,21 @@ public class FriendListLoader extends CursorLoader {
         params.put(VKApiConst.USER_ID, userId);
         VKRequest getFriends = VKApi.friends().get(params);
 
+        /*=== DEBUG DELAY ===*
+        final int delayMax = 5;
+        for (int i = 0; i < delayMax; i++){
+            try {
+                publishProgress(R.string.stage_delay, i, delayMax);
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        /*=== End of DELAY ===*/
+
         final VKUsersArray[] friends = new VKUsersArray[]{null};
         publishProgress(R.string.stage_downloading, 0, 1);
+
         getFriends.executeSyncWithListener(new VKRequest.VKRequestListener() {
             @Override
             public void onComplete(VKResponse response) {

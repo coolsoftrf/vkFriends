@@ -50,6 +50,7 @@ Lorem Ipsum - это текст-\"рыба\", часто используемы�
     <string name="friend_image_description">фото друга</string>
 
     <!-- Listeners related strings -->
+    <!--<string name="stage_delay">Имитация задержки…</string>-->
     <string name="stage_downloading">Загрузка списка…</string>
     <string name="stage_collecting">Сбор данных…</string>
     <string name="stage_organizing">Обновление данных…</string>

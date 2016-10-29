@@ -121,4 +121,9 @@ public class FriendsData {
     public static VKApiUser getRightUser(){
         return VKFApplication.app().getRight();
     }
+
+    public static class Invalid {
+        public final static int RESOURCE = 0;
+        public final static int PROGRESS = -1;
+    }
 }
