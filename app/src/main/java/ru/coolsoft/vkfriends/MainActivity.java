@@ -364,7 +364,7 @@ implements AppBarLayout.OnOffsetChangedListener
         mContactNameRight.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
 
-        final int size = (int)((2 + fraction) * mAppBarHeight);
+        final int size = (int)((2.5 + 1.5 * fraction) * mAppBarHeight);
         lp = mContactImageLeft.getLayoutParams();
         lp.height = lp.width = size;
         mContactImageLeft.setLayoutParams(lp);
