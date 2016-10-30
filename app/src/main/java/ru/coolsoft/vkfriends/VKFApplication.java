@@ -17,8 +17,6 @@ import com.vk.sdk.api.model.VKApiUser;
 public class VKFApplication extends Application {
     private static final String TAG = VKFApplication.class.getSimpleName();
 
-    public static final String PREF_KEY_ME = "current_user";
-
     public static final String PREF_KEY_ACCESS_TOKEN = "access_token";
     public static final String PREF_KEY_USERNAME = "user_name";
     public static final String PREF_KEY_USERPHOTO = "user_photo_url";
@@ -26,8 +24,8 @@ public class VKFApplication extends Application {
     private static VKFApplication mApp;
 
     private VKApiUser mMe;
-    private VKApiUser mUserLeft;
-    private VKApiUser mUserRight;
+    private final VKApiUser mUserLeft = new VKApiUser();
+    private final VKApiUser mUserRight = new VKApiUser();
     private boolean mInitialized;
     private VKAccessTokenTracker mVKAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
@@ -76,13 +74,13 @@ public class VKFApplication extends Application {
         return mUserLeft;
     }
     public void setLeft(VKApiUser left) {
-        mUserLeft = left;
+        mUserLeft.parse(left.fields);
     }
 
     public VKApiUser getRight() {
         return mUserRight;
     }
     public void setRight(VKApiUser right) {
-        mUserRight = right;
+        mUserRight.parse(right.fields);
     }
 }

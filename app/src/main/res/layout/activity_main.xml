@@ -55,16 +55,27 @@
                     android:id="@+id/spaceAvatar1"
                     android:layout_width="@dimen/text_margin"
                     android:layout_height="match_parent" />
-                <ImageView
-                    android:layout_width="@dimen/avatar_size"
-                    android:layout_height="@dimen/avatar_size"
-                    android:id="@+id/avatar1"
-                    android:paddingStart="@dimen/text_margin"
-                    android:paddingLeft="@dimen/text_margin"
-                    android:src="@drawable/blue_user_icon"
-                    android:tag="@string/tag_user_left"
-                    android:contentDescription="@string/name1_placeholder"/>
-
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_width="@dimen/avatar_size"
+                        android:layout_height="@dimen/avatar_size"
+                        android:id="@+id/avatar1"
+                        android:paddingStart="@dimen/text_margin"
+                        android:paddingLeft="@dimen/text_margin"
+                        android:src="@drawable/blue_user_icon"
+                        android:tag="@string/tag_user_left"
+                        android:contentDescription="@string/name1_placeholder"
+                        />
+                    <ProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/waiter_left"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        />
+                </FrameLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -72,17 +83,29 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="top|end"
                 >
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    >
+                    <ImageView
+                        android:layout_width="@dimen/avatar_size"
+                        android:layout_height="@dimen/avatar_size"
+                        android:id="@+id/avatar2"
+                        android:paddingEnd="@dimen/text_margin"
+                        android:paddingRight="@dimen/text_margin"
+                        android:src="@drawable/blue_user_icon"
+                        android:tag="@string/tag_user_right"
+                        android:contentDescription="@string/name2_placeholder"
+                        />
+                    <ProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/waiter_right"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        />
+                </FrameLayout>
 
-                <ImageView
-                    android:layout_width="@dimen/avatar_size"
-                    android:layout_height="@dimen/avatar_size"
-                    android:id="@+id/avatar2"
-                    android:paddingEnd="@dimen/text_margin"
-                    android:paddingRight="@dimen/text_margin"
-                    android:src="@drawable/blue_user_icon"
-                    android:tag="@string/tag_user_right"
-                    android:contentDescription="@string/name2_placeholder"
-                    />
                 <Space
                     android:id="@+id/spaceAvatar2"
                     android:layout_width="@dimen/text_margin"

@@ -46,6 +46,7 @@ import java.lang.annotation.RetentionPolicy;
 import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
+import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
 import ru.coolsoft.vkfriends.loaders.sources.SharedPreferencesSource;
 
 public class MainActivity extends AppCompatActivity
@@ -64,6 +65,10 @@ implements AppBarLayout.OnOffsetChangedListener
     @interface Side{}
     private final static int FLAG_LEFT = 1;
     private final static int FLAG_RIGHT = 2;
+
+    @IntDef({View.VISIBLE, View.INVISIBLE, View.GONE})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Visibility{}
 
     //main view controls
     private FrameLayout mFl;
@@ -84,6 +89,8 @@ implements AppBarLayout.OnOffsetChangedListener
     private ImageView mAvatar;
     private ProgressBar mWaiter;
     private ProgressBar mPhotoWaiter;
+    private ProgressBar mLeftPhotoWaiter;
+    private ProgressBar mRightPhotoWaiter;
 
     //callback handlers
     //Handler mDelayHandler = new Handler();
@@ -165,13 +172,34 @@ implements AppBarLayout.OnOffsetChangedListener
         }
     };
 
+    private ProgressBar findWaiterByLoaderId(int id){
+        switch (id) {
+            case FriendsData.LOADER_ID_USER_PHOTO:
+                return mPhotoWaiter;
+            case FriendsData.LOADER_ID_LEFT_USER_PHOTO:
+                return mLeftPhotoWaiter;
+            case FriendsData.LOADER_ID_RIGHT_USER_PHOTO:
+                return mRightPhotoWaiter;
+            default:
+                return null;
+        }
+    }
+
+    private void setWaiterVisibilityByLoaderId(int id, @Visibility int visibility){
+        final ProgressBar waiter = findWaiterByLoaderId(id);
+
+        if (waiter != null) {
+            waiter.setVisibility(visibility);
+        }
+    }
+
     private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
         @Override
-        public void onDownloadStarted() {
+        public void onDownloadStarted(final int id) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mPhotoWaiter.setVisibility(View.VISIBLE);
+                    setWaiterVisibilityByLoaderId(id, View.VISIBLE);
                 }
             });
         }
@@ -179,26 +207,61 @@ implements AppBarLayout.OnOffsetChangedListener
     private LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         @Override
         public Loader<String> onCreateLoader(int id, Bundle args) {
-                ImageLoader il = new ImageLoader(MainActivity.this
-                        , new SharedPreferencesSource(
+            final VKApiUser user;
+            VKApiUser tmpUser = null;
+            ILoaderSource src;
+            switch(id) {
+                case FriendsData.LOADER_ID_USER_PHOTO:
+                    src = new SharedPreferencesSource(
                             PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
                             , VKFApplication.PREF_KEY_USERPHOTO
-                ));
+                    );
+                    break;
+                case FriendsData.LOADER_ID_LEFT_USER_PHOTO:
+                    tmpUser = FriendsData.getLeftUser();
+                case FriendsData.LOADER_ID_RIGHT_USER_PHOTO:
+                    if (tmpUser == null){
+                        tmpUser = FriendsData.getRightUser();
+                    }
+                    user = tmpUser;
 
+                    src = new ILoaderSource() {
+                        @Override
+                        public String value() {
+                            return user.photo_200;
+                        }
+                    };
+                    break;
+                default:
+                    return null;
+            }
+
+            ImageLoader il = new ImageLoader(MainActivity.this, src);
             il.setOnDownloadStartedListener(mDownloadStartedListener);
-                return  il;
+            return  il;
         }
 
         @Override
         public void onLoadFinished(Loader<String> loader, String photoFileName) {
-            if (mAvatar != null) {
+            final int loaderId = loader.getId();
+            final ImageView imageView;
+            switch (loaderId){
+                case FriendsData.LOADER_ID_USER_PHOTO:
+                    imageView = mAvatar; break;
+                case FriendsData.LOADER_ID_LEFT_USER_PHOTO:
+                    imageView = mContactImageLeft; break;
+                case FriendsData.LOADER_ID_RIGHT_USER_PHOTO:
+                    imageView = mContactImageRight; break;
+                default: return;
+            }
+            if (imageView != null) {
                 if (photoFileName != null){
-                    mAvatar.setImageURI(Uri.fromFile(new File(photoFileName)));
+                    imageView.setImageURI(Uri.fromFile(new File(photoFileName)));
                 } else {
-                    mAvatar.setImageResource(R.drawable.blue_user_icon);
+                    imageView.setImageResource(R.drawable.blue_user_icon);
                 }
             }
-            mPhotoWaiter.setVisibility(View.GONE);
+            setWaiterVisibilityByLoaderId(loaderId, View.GONE);
         }
 
         @Override
@@ -273,6 +336,8 @@ implements AppBarLayout.OnOffsetChangedListener
         if (mContactImageRight != null) {
             mContactImageRight.setOnClickListener(this);
         }
+        mLeftPhotoWaiter = (ProgressBar) findViewById(R.id.waiter_left);
+        mRightPhotoWaiter = (ProgressBar) findViewById(R.id.waiter_right);
         updateUsers(FLAG_LEFT | FLAG_RIGHT);
 
         mSpace1 = (Space) findViewById(R.id.spaceAvatar1);
@@ -364,19 +429,19 @@ implements AppBarLayout.OnOffsetChangedListener
                 refreshNavigationView();
                 break;
             case VKFApplication.PREF_KEY_USERPHOTO:
-                refreshUserPhoto();
+                refreshUserPhoto(FriendsData.LOADER_ID_USER_PHOTO);
                 break;
             default:
                 break;
         }
     }
 
-    private void refreshUserPhoto() {
+    private void refreshUserPhoto(int loaderId) {
         final LoaderManager lm = getSupportLoaderManager();
-        final Loader ldr = lm.getLoader(FriendsData.LOADER_ID_USER_PHOTO);
+        final Loader ldr = lm.getLoader(loaderId);
 
         //regardless whether we have the loader or not - reinitialize callbacks
-        lm.initLoader(FriendsData.LOADER_ID_USER_PHOTO, null, mUserPhotoLoaderCallback);
+        lm.initLoader(loaderId, null, mUserPhotoLoaderCallback);
 
         //but restart loading if only we already had it before (have NOT just run it at initialization)
         if (ldr != null){
@@ -429,7 +494,7 @@ implements AppBarLayout.OnOffsetChangedListener
             miLogin.setTitle(name);
         }
 
-       refreshUserPhoto();
+       refreshUserPhoto(FriendsData.LOADER_ID_USER_PHOTO);
     }
 
     @Override
@@ -480,16 +545,16 @@ implements AppBarLayout.OnOffsetChangedListener
     private void updateUsers(@Side int side){
         if ((side & FLAG_LEFT) > 0){
             VKApiUser left = FriendsData.getLeftUser();
-            if (left != null) {
+            if (left != null && left.id != 0) {
                 mContactNameLeft.setText(left.first_name);
-                //ToDo: start left user avatar loader
+                refreshUserPhoto(FriendsData.LOADER_ID_LEFT_USER_PHOTO);
             }
         }
         if ((side & FLAG_RIGHT) > 0){
             VKApiUser right = FriendsData.getRightUser();
-            if (right != null) {
+            if (right != null && right.id != 0) {
                 mContactNameRight.setText(right.first_name);
-                //ToDo: start right user avatar loader
+                refreshUserPhoto(FriendsData.LOADER_ID_RIGHT_USER_PHOTO);
             }
         }
     }

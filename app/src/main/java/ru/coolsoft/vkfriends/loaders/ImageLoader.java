@@ -26,7 +26,7 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     private ILoaderSource mSource;
 
     public interface OnDownloadStartedListener{
-        void onDownloadStarted();
+        void onDownloadStarted(int loaderId);
     }
     private OnDownloadStartedListener mListener;
 
@@ -40,11 +40,8 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         if (mListener != null){
-            mListener.onDownloadStarted();
+            mListener.onDownloadStarted(getId());
         }
-        //ToDo: test waiters on long loads:
-        // - at startup
-        // - at rotation
         try {
             String imageUrl = mSource.value();
 
@@ -63,6 +60,7 @@ public class ImageLoader extends AsyncTaskLoader<String> {
                     if (!targetPath.exists() && !targetPath.mkdirs()) {
                         return null;
                     }
+                    //ToDo: implement LRU cache
 
                     connection = u.openConnection();
                     connection.connect();

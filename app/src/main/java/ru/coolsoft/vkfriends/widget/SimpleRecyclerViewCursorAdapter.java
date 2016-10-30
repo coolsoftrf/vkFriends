@@ -20,21 +20,21 @@ import java.util.Map;
  * into views with IDs enumerated in {@code to} parameter
  * of the view holders created according to IDs enumerated in {@code viewTypeIDs}
  */
-public class SimpleRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<SimpleRecyclerViewCursorAdapterViewHolder> {
+public class SimpleRecyclerViewCursorAdapter
+extends RecyclerViewCursorAdapter<SimpleRecyclerViewCursorAdapterViewHolder>
+implements View.OnClickListener{
     String mFrom[][];
     List<Map<String, Integer>> mFromIndexMaps = new ArrayList<>();
     int mTo[][];
     int mViewTypeIDs[];
-    View.OnClickListener mListener;
 
     public SimpleRecyclerViewCursorAdapter(Cursor cursor, String from[][], int to[][]
-            , int viewTypeIdLayoutResourceIDs[], View.OnClickListener listener) {
+            , int... viewTypeIdLayoutResourceIDs) {
         super(null);
 
         mFrom = from;
         mTo = to;
         mViewTypeIDs = viewTypeIdLayoutResourceIDs;
-        mListener = listener;
 
         swapCursor(cursor);
     }
@@ -57,12 +57,18 @@ public class SimpleRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<S
         }
 
         View view = LayoutInflater.from(parent.getContext()).inflate(mViewTypeIDs[viewType], parent, false);
-
-        if (mListener != null) {
-            view.setOnClickListener(mListener);
-        }
+        //ToDo: make the view react to taps over its entire area, not only image and text views
+        view.setOnClickListener(this);
 
         return new SimpleRecyclerViewCursorAdapterViewHolder(view, mFrom[viewType], mTo[viewType]);
+    }
+
+    /**Default implementation is empty
+     *
+     * @param v root view of the list item being clicked
+     */
+    @Override
+    public void onClick(View v) {
     }
 
     @Override
@@ -72,12 +78,34 @@ public class SimpleRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<S
             final String value = cursor.getString(mFromIndexMaps.get(viewType).get(field));
             View view = holder.getViewByCursorField(field);
             if (view instanceof TextView){
-                ((TextView)view).setText(value);
+                updateTextView(value, (TextView) view);
             } else if (view instanceof ImageView){
-                ((ImageView)view).setImageURI(Uri.parse(value));
+                updateImageView(value, (ImageView) view);
             } else {
                 view.setTag(value);
             }
         }
+    }
+
+    /**
+     * Called when a data string for the specified {@code view} is ready.
+     * Default implementation puts the {@code value} as the {@code view} text
+     *
+     * @param value the string data selected for the specified {@code view}
+     * @param view the text view to hold the selected {@code value}
+     */
+    protected void updateTextView(String value, TextView view) {
+        view.setText(value);
+    }
+
+    /**
+     * Called when a data string for the specified {@code view} is ready.
+     * Default implementation puts the {@code value} as a source image for the {@code view}
+     *
+     * @param value the string data selected for the specified {@code view}
+     * @param view the image view to hold the selected {@code value}
+     */
+    protected void updateImageView(String value, ImageView view) {
+        view.setImageURI(Uri.parse(value));
     }
 }

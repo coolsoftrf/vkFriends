@@ -33,7 +33,12 @@ public class FriendsData {
 
     public final static int LOADER_ID_USER_PHOTO = 1;
     public final static int LOADER_ID_WHOSE_PHOTO = 2;
-    public final static int LOADER_ID_FRIEND_LIST = 11;
+
+    public final static int LOADER_ID_FRIEND_LIST = 10;
+    public final static int LOADER_ID_LEFT_USER_PHOTO = 11;
+    public final static int LOADER_ID_RIGHT_USER_PHOTO = 12;
+
+    public final static int LOADER_ID_FRIENDLIST_PHOTO_START = 10000;
 
     private static SQLiteDatabase mDb;
     private static SQLiteDatabase db(){
