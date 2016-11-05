@@ -99,8 +99,6 @@ implements AppBarLayout.OnOffsetChangedListener
         public void onResult(VKAccessToken res) {
             // Пользователь успешно авторизовался
             res.saveTokenToSharedPreferences(MainActivity.this, VKFApplication.PREF_KEY_ACCESS_TOKEN);
-            //reload avatar
-            //update contacts in db
         }
         @Override
         public void onError(VKError error) {
@@ -185,9 +183,8 @@ implements AppBarLayout.OnOffsetChangedListener
         }
     }
 
-    private void setWaiterVisibilityByLoaderId(int id, @Visibility int visibility){
-        final ProgressBar waiter = findWaiterByLoaderId(id);
-
+    private void setWaiterVisibilityByLoaderId(int id, @Visibility int visibility) {
+        ProgressBar waiter = findWaiterByLoaderId(id);
         if (waiter != null) {
             waiter.setVisibility(visibility);
         }
@@ -196,12 +193,7 @@ implements AppBarLayout.OnOffsetChangedListener
     private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
         @Override
         public void onDownloadStarted(final int id) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    setWaiterVisibilityByLoaderId(id, View.VISIBLE);
-                }
-            });
+            setWaiterVisibilityByLoaderId(id, View.VISIBLE);
         }
     };
     private LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
@@ -392,7 +384,6 @@ implements AppBarLayout.OnOffsetChangedListener
         //noinspection SimplifiableIfStatement
         switch (id){
             case R.id.action_settings:
-
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;

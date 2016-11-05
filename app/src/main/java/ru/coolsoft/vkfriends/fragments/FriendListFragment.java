@@ -9,14 +9,19 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -35,7 +40,7 @@ import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.loaders.FriendListLoader;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
-import ru.coolsoft.vkfriends.widget.SimpleRecyclerViewCursorAdapter;
+import ru.coolsoft.vkfriends.widget.FilterableRecyclerViewCursorAdapter;
 
 /**
  * A fragment representing a list of friends to compare in main activity
@@ -43,7 +48,9 @@ import ru.coolsoft.vkfriends.widget.SimpleRecyclerViewCursorAdapter;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class FriendListFragment extends Fragment {
+public class FriendListFragment
+extends Fragment
+implements SearchView.OnQueryTextListener{
     private static final String ARG_ROOT_USER = "root-user";
 
     //Instance state bundle keys
@@ -78,8 +85,10 @@ public class FriendListFragment extends Fragment {
     private RelativeLayout mStageLayout;
 
     //references to worker objects
-    private SimpleRecyclerViewCursorAdapter mCursorAdapter;
+    private FilterableRecyclerViewCursorAdapter mCursorAdapter;
     private OnListFragmentInteractionListener mListener;
+
+    /////////////////////// CALLBACKS AND LISTENERS ///////////////////////
 
     private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
         @Override
@@ -224,12 +233,7 @@ public class FriendListFragment extends Fragment {
         public void onLoaderReset(Loader<Cursor> loader) {}
     };
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public FriendListFragment() {}
-
+    /////////////////////// CONSTRUCTORS ///////////////////////
     @SuppressWarnings("unused")
     public static FriendListFragment newInstance(VKApiUser user) {
         FriendListFragment fragment = new FriendListFragment();
@@ -238,6 +242,14 @@ public class FriendListFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
+    public FriendListFragment() {}
+
+    /////////////////////// FRAGMENT OVERRIDES ///////////////////////
 
     @Override
     public void onAttach(Context context) {
@@ -294,6 +306,7 @@ public class FriendListFragment extends Fragment {
         if (mLastStageId != FriendsData.Invalid.RESOURCE){
             mProgressListener.onProgressUpdate(mLastStageId, mLastStagePercentage, PROGRESS_TOTAL);
         }
+        setHasOptionsMenu(true);
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
@@ -309,9 +322,10 @@ public class FriendListFragment extends Fragment {
             final int[][] to = {{
                     R.id.friend_layout, R.id.friend_name, R.id.friend_photo
             }};
+            final int[] keys = {0 /*_id*/, 1/*name*/};
 
-            mCursorAdapter = new SimpleRecyclerViewCursorAdapter(null
-                    , from, to
+            mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
+                    , from, to, keys
                     , R.layout.fragment_user
             ){
                 @Override
@@ -340,7 +354,15 @@ public class FriendListFragment extends Fragment {
         refreshTitle(savedInstanceState == null);
 
         return view;
+    }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.friendlist_menu, menu);
+
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(this);
     }
 
     @Override
@@ -363,6 +385,8 @@ public class FriendListFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
+
+    /////////////////////// HELPER METHODS ///////////////////////
 
     private void refreshTitle(boolean reload) {
         if (mCurrentUser != null) {
@@ -401,6 +425,20 @@ public class FriendListFragment extends Fragment {
         }
     }
 
+    /////////////////////// INTERFACE IMPLEMENTATIONS ///////////////////////
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        mCursorAdapter.filter(newText);
+        return true;
+    }
+
+    /////////////////////// INTERFACE DECLARATIONS ///////////////////////
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated

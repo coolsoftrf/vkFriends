@@ -130,5 +130,6 @@ public class FriendsData {
     public static class Invalid {
         public final static int RESOURCE = 0;
         public final static int PROGRESS = -1;
+        public static final int INDEX = -1;
     }
 }

@@ -23,15 +23,23 @@ import java.util.Map;
 public class SimpleRecyclerViewCursorAdapter
 extends RecyclerViewCursorAdapter<SimpleRecyclerViewCursorAdapterViewHolder>
 implements View.OnClickListener{
-    String mFrom[][];
-    List<Map<String, Integer>> mFromIndexMaps = new ArrayList<>();
-    int mTo[][];
-    int mViewTypeIDs[];
+    private String mFrom[][];
+    private List<Map<String, Integer>> mFromIndexMaps = new ArrayList<>();
+    private int mTo[][];
+    private int mViewTypeIDs[];
+
+    protected SimpleRecyclerViewCursorAdapter(){
+        super();
+    }
 
     public SimpleRecyclerViewCursorAdapter(Cursor cursor, String from[][], int to[][]
             , int... viewTypeIdLayoutResourceIDs) {
-        super(null);
+        this();
+        init(cursor, from, to, viewTypeIdLayoutResourceIDs);
+    }
 
+    protected void init(Cursor cursor, String from[][], int to[][]
+            , int... viewTypeIdLayoutResourceIDs){
         mFrom = from;
         mTo = to;
         mViewTypeIDs = viewTypeIdLayoutResourceIDs;
@@ -57,7 +65,6 @@ implements View.OnClickListener{
         }
 
         View view = LayoutInflater.from(parent.getContext()).inflate(mViewTypeIDs[viewType], parent, false);
-        //ToDo: make the view react to taps over its entire area, not only image and text views
         view.setOnClickListener(this);
 
         return new SimpleRecyclerViewCursorAdapterViewHolder(view, mFrom[viewType], mTo[viewType]);

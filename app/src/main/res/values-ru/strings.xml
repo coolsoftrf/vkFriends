@@ -45,6 +45,8 @@ Lorem Ipsum - это текст-\"рыба\", часто используемы�
     <string name="padding_content_description">Забивка для панели</string>
     <string name="title_activity_settings">Настройки</string>
 
+    <string name="search">Поиск</string>
+
     <string name="label_friends_of">Друзья</string>
     <string name="whose_image_description">фото пользователя</string>
     <string name="friend_image_description">фото друга</string>

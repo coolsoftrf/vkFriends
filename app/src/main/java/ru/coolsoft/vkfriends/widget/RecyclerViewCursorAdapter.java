@@ -16,10 +16,13 @@ public abstract class RecyclerViewCursorAdapter<VH extends RecyclerView.ViewHold
     private boolean mDataValid;
     private int mRowIDColumn;
 
+    protected RecyclerViewCursorAdapter(){
+        setHasStableIds(true);
+    }
 
     public RecyclerViewCursorAdapter(Cursor cursor)
     {
-        setHasStableIds(true);
+        this();
         swapCursor(cursor);
     }
 
@@ -73,8 +76,7 @@ public abstract class RecyclerViewCursorAdapter<VH extends RecyclerView.ViewHold
     }
 
     protected abstract void updateCursorFields(Cursor cursor);
-    public Cursor swapCursor(Cursor newCursor)
-    {
+    public Cursor swapCursor(Cursor newCursor) {
         if(newCursor == mCursor){
             return null;
         }
@@ -92,14 +94,22 @@ public abstract class RecyclerViewCursorAdapter<VH extends RecyclerView.ViewHold
             mRowIDColumn = newCursor.getColumnIndexOrThrow("_id");
             mDataValid = true;
             updateCursorFields(newCursor);
-            notifyDataSetChanged();
+            notifyDataChanged();
         }
         else{
             mRowIDColumn = -1;
             mDataValid = false;
-            notifyDataSetChanged();
+            notifyDataChanged();
         }
         return oldCursor;
+    }
+
+    /**
+     * Override this method to notify the adapter about specific changes in the contents
+     * in order to run animations on certain RecyclerView items
+     */
+    protected void notifyDataChanged(){
+        notifyDataSetChanged();
     }
 
 

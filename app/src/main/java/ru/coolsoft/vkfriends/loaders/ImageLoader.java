@@ -26,6 +26,10 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     private ILoaderSource mSource;
 
     public interface OnDownloadStartedListener{
+        /**
+         * Called in UI thread to indicate that the image loading task will be started soon
+         * @param loaderId the ID of the loader which image loading task is going to start
+         */
         void onDownloadStarted(int loaderId);
     }
     private OnDownloadStartedListener mListener;
@@ -39,9 +43,6 @@ public class ImageLoader extends AsyncTaskLoader<String> {
     //// Overrides of base methods ////
     @Override
     public String loadInBackground() {
-        if (mListener != null){
-            mListener.onDownloadStarted(getId());
-        }
         try {
             String imageUrl = mSource.value();
 
@@ -116,7 +117,7 @@ public class ImageLoader extends AsyncTaskLoader<String> {
         if (targetFile.exists()){
             /*=== DEBUG DELAY ===*
             if (mListener != null){
-                mListener.onDownloadStarted();
+                mListener.onDownloadStarted(getId());
             }
             new android.os.Handler().postDelayed(new Runnable() {
                     @Override
@@ -132,6 +133,9 @@ public class ImageLoader extends AsyncTaskLoader<String> {
             return;
         }
 
+        if (mListener != null){
+            mListener.onDownloadStarted(getId());
+        }
         forceLoad();
     }
 
