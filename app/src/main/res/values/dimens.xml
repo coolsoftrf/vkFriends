@@ -7,6 +7,6 @@
     <dimen name="elevation_title">5dp</dimen>
 
     <!-- image view size is to match photo size -->
-    <dimen name="title_photo_size">200px</dimen>
-    <dimen name="list_photo_size">100px</dimen>
+    <dimen name="title_photo_size">100dp</dimen>
+    <dimen name="list_photo_size">50dp</dimen>
 </resources>

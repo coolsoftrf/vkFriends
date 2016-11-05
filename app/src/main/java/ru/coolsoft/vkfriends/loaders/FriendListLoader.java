@@ -6,6 +6,7 @@ import android.support.v4.content.CursorLoader;
 
 import com.vk.sdk.api.VKApi;
 import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
@@ -29,6 +30,7 @@ public class FriendListLoader extends CursorLoader {
     }
     public interface IProgressListener{
         void onProgressUpdate(int stageResourceId, long progress, long total);
+        void onError(String errorMsg);
     }
 
     private ICursorProvider mCursorProvider;
@@ -55,6 +57,13 @@ public class FriendListLoader extends CursorLoader {
             mProgressListener.onProgressUpdate(stageResourceId, progress, total);
         }
     }
+
+    private void publishError(String errorMsg) {
+        if (mProgressListener != null){
+            mProgressListener.onError(errorMsg);
+        }
+    }
+
     @Override
     public Cursor loadInBackground() {
         final String userId = mSource.value();
@@ -90,10 +99,12 @@ public class FriendListLoader extends CursorLoader {
             public void onProgress(VKRequest.VKProgressType progressType, long bytesLoaded, long bytesTotal) {
                 publishProgress(R.string.stage_downloading, bytesLoaded, bytesTotal);
             }
+
+            @Override
+            public void onError(VKError error) {
+                publishError(error.toString());
+            }
         });
-        if (friends[0] == null) {
-            return null;
-        }
 
         //query current users
         publishProgress(R.string.stage_collecting, 0, 1);
@@ -106,38 +117,42 @@ public class FriendListLoader extends CursorLoader {
         Map<String, String> mapCurrentFriends = new HashMap<>();
         int index = 0;
         if (curFriends != null ){
-            final int count = curFriends.getCount();
-            if (count > 0){
-                curFriends.moveToFirst();
-                do {
-                    mapCurrentFriends.put(curFriends.getString(0), curFriends.getString(1));
-                    publishProgress(R.string.stage_collecting, ++index, count);
-                    curFriends.moveToNext();
-                } while (!curFriends.isLast());
-            }
-            curFriends.close();
-        }
-
-        //put changed friends' information into DB
-        index = 0;
-        //ToDo: update activity flag
-        for (VKApiUserFull user : friends[0]) {
-            publishProgress(R.string.stage_organizing, index++, friends[0].size());
-
-            final String strUserId = String.valueOf(user.id);
-            final boolean matches;
-            if (!mapCurrentFriends.containsKey(strUserId)){
-                FriendsData.updateFriendData(userId, strUserId);
-                matches = false;
-            } else {
-                matches = mapCurrentFriends.get(strUserId).equals(user.toString() + user.photo_200);
-            }
-
-            if (!matches) {
-                FriendsData.updateUserData(user);
+            try {
+                final int count = curFriends.getCount();
+                if (count > 0) {
+                    curFriends.moveToFirst();
+                    do {
+                        mapCurrentFriends.put(curFriends.getString(0), curFriends.getString(1));
+                        publishProgress(R.string.stage_collecting, ++index, count);
+                        curFriends.moveToNext();
+                    } while (!curFriends.isLast());
+                }
+            } finally {
+                curFriends.close();
             }
         }
 
+        if (friends[0] != null) {
+            //put changed friends' information into DB
+            index = 0;
+            //ToDo: update activity flag
+            for (VKApiUserFull user : friends[0]) {
+                publishProgress(R.string.stage_organizing, index++, friends[0].size());
+
+                final String strUserId = String.valueOf(user.id);
+                final boolean matches;
+                if (!mapCurrentFriends.containsKey(strUserId)) {
+                    FriendsData.updateFriendData(userId, strUserId);
+                    matches = false;
+                } else {
+                    matches = mapCurrentFriends.get(strUserId).equals(user.toString() + user.photo_200);
+                }
+
+                if (!matches) {
+                    FriendsData.updateUserData(user);
+                }
+            }
+        }
         return mCursorProvider.getCursor(userId, mProjection);
     }
 }

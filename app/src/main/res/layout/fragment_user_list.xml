@@ -42,14 +42,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/list"
-            android:name="ru.coolsoft.vkfriends.FriendListFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutManager="LinearLayoutManager"
-            tools:context=".fragments.FriendListFragment"
-            tools:listitem="@layout/fragment_user" />
+        <include layout="@layout/friend_list"/>
 
         <RelativeLayout
             android:layout_width="match_parent"

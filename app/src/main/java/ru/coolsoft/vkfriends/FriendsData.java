@@ -67,6 +67,22 @@ public class FriendsData {
         db().replace(FriendsContract.Friends.TABLE_NAME, null, values);
     }
 
+    public static VKApiUser getUser(String itemId) {
+        return getUser(itemId
+                , new String[]{
+                        FriendsContract.Users._ID
+                        , FriendsContract.Users.COLUMN_USER_NAME
+                        , FriendsContract.Users.COLUMN_USER_NAME_GEN
+                        , FriendsContract.Users.COLUMN_USER_PHOTO200
+                }
+                , new String[]{
+                        FriendsData.FIELDS_ID
+                        , FriendsData.FIELDS_NAME
+                        , FriendsData.FIELDS_NAME_GEN
+                        , FriendsData.FIELDS_PHOTO200
+                });
+    }
+
     public static VKApiUser getUser(String id, String[] dbFieldNames, String[] objFieldNames) {
         Cursor c = db().query(FriendsContract.Users.TABLE_NAME, dbFieldNames
                 , FriendsContract.Users._ID + " = ?", new String[]{String.valueOf(id)}

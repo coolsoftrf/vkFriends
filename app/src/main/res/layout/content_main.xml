@@ -9,10 +9,5 @@
     tools:context="ru.coolsoft.vkfriends.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
-        android:text="@string/large_text" />
-
+    <include layout="@layout/friend_list"/>
 </android.support.v4.widget.NestedScrollView>

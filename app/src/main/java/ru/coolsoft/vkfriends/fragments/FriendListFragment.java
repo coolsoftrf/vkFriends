@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vk.sdk.api.model.VKApiUser;
 
@@ -192,6 +193,18 @@ implements SearchView.OnQueryTextListener{
                                 }
                             }
                         });
+        }
+
+        @Override
+        public void onError(final String errorMsg) {
+            final FragmentActivity activity = getActivity();
+            if (activity != null)
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(activity, errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                });
         }
     };
     private LoaderManager.LoaderCallbacks<Cursor> mFriendlistLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {

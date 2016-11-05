@@ -9,7 +9,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.IntDef;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -43,7 +42,6 @@ import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
@@ -116,8 +114,6 @@ implements AppBarLayout.OnOffsetChangedListener
                     VKApiUser me = (VKApiUser) o;
                     FriendsData.setCurrentUser (me);
                     final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-                    final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
-                    final String newName = me.toString();
 
                     /*=== DEBUG DELAY ===*/
                     /**
@@ -125,8 +121,10 @@ implements AppBarLayout.OnOffsetChangedListener
                         new Runnable() {
                             @Override
                             public void run() {/**/
-                    Log.d(TAG, "Updating USERNAME preference");
                     SharedPreferences.Editor editor = null;
+                    //Log.d(TAG, "Updating USERNAME preference");
+                    final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
+                    final String newName = me.toString();
                     if (newName.equals(name)){
                         refreshNavigationView();
                     } else {
@@ -134,6 +132,7 @@ implements AppBarLayout.OnOffsetChangedListener
                         editor.putString(VKFApplication.PREF_KEY_USERNAME, newName);
                     }
 
+                    //Log.d(TAG, "Updating USERPHOTO preference");
                     final String photo = sp.getString(VKFApplication.PREF_KEY_USERPHOTO, null);
                     final String newPhoto = me.photo_200;
                     if (!newPhoto.equals(photo)){
@@ -163,10 +162,16 @@ implements AppBarLayout.OnOffsetChangedListener
         @Override
         public void onError(VKError error) {
             Log.d(TAG, "Error retrieving USER data: " + error.errorMessage);
+
+            //try offline mode
+            VKAccessToken token = VKAccessToken.tokenFromSharedPreferences(MainActivity.this, VKFApplication.PREF_KEY_ACCESS_TOKEN);
+            if (token != null) {
+                FriendsData.setCurrentUser(FriendsData.getUser(token.userId));
+            }
+
             refreshNavigationView();
             mWaiter.setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
-            super.onError(error);
         }
     };
 
@@ -495,10 +500,9 @@ implements AppBarLayout.OnOffsetChangedListener
             case R.id.name1:
             case R.id.avatar2:
             case R.id.name2:
-                FragmentManager fm = getSupportFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
+                final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 
-                FriendListFragment flf = FriendListFragment.newInstance(FriendsData.getCurrentUser());
+                final FriendListFragment flf = FriendListFragment.newInstance(FriendsData.getCurrentUser());
                 //flf.setRetainInstance(true);
                 ft.add(R.id.container, flf, (String)v.getTag())
                         .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -514,16 +518,7 @@ implements AppBarLayout.OnOffsetChangedListener
     @Override
     public void onListFragmentInteraction(String fragmentTag, String itemId) {
         //change appropriate friend's photo and name
-        VKApiUser user = FriendsData.getUser(itemId
-                , new String[]{
-                        FriendsContract.Users._ID
-                        , FriendsContract.Users.COLUMN_USER_NAME
-                        , FriendsContract.Users.COLUMN_USER_PHOTO200}
-                , new String[]{
-                        FriendsData.FIELDS_ID
-                        , FriendsData.FIELDS_NAME
-                        , FriendsData.FIELDS_PHOTO200
-                });
+        VKApiUser user = FriendsData.getUser(itemId);
         if (fragmentTag.equals(getString(R.string.tag_user_left))){
             FriendsData.setLeftUser(user);
             updateUsers(FLAG_LEFT);

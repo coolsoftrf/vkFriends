@@ -95,4 +95,8 @@ public class ExampleInstrumentedTest {
     //waiters at rotation
 
     //stage progress at rotation
+
+    //show user name and photo and friends in offline mode
+
+    //change user - name, photo and friends should update
 }
