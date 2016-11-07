@@ -1,10 +1,13 @@
 package ru.coolsoft.vkfriends.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 //import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
@@ -16,7 +19,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,19 +28,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.vk.sdk.api.model.VKApiUser;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 
-import ru.coolsoft.vkfriends.FriendsData;
+import ru.coolsoft.vkfriends.common.FriendListsManager;
+import ru.coolsoft.vkfriends.common.FriendsData;
 import ru.coolsoft.vkfriends.R;
-import ru.coolsoft.vkfriends.db.FriendsContract;
-import ru.coolsoft.vkfriends.loaders.FriendListLoader;
 import ru.coolsoft.vkfriends.loaders.ImageLoader;
 import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
 import ru.coolsoft.vkfriends.widget.FilterableRecyclerViewCursorAdapter;
@@ -56,22 +55,13 @@ implements SearchView.OnQueryTextListener{
 
     //Instance state bundle keys
     private static final String KEY_PHOTO_PROGRESS = "photo-progress";
-    private static final String KEY_STAGE_ID = "stage-id";
-    private static final String KEY_STAGE_PROGRESS = "stage-progress";
 
     //loader argument keys
     private static final String KEY_PHOTO = "key_photo";
 
-    // common constants
-    private static final String USERS_TABLE_ALIAS = "u";
-    private static final int PROGRESS_TOTAL = 100;
-
     //current state fields
     private VKApiUser mCurrentUser;
     private boolean mLastPhotoProgress = false;
-    private int mLastStageId = FriendsData.Invalid.RESOURCE;
-    private int mLastStagePercentage = FriendsData.Invalid.PROGRESS;
-
     private SparseArray<WeakReference<ImageView>> mFriendlistPhotos = new SparseArray<>();
 
     //private Handler mHandler = new Handler();
@@ -83,15 +73,66 @@ implements SearchView.OnQueryTextListener{
 
     private TextView mStageName;
     private ProgressBar mStageProgress;
-    private RelativeLayout mStageLayout;
+    private View mStageLayout;
 
     //references to worker objects
     private FilterableRecyclerViewCursorAdapter mCursorAdapter;
     private OnListFragmentInteractionListener mListener;
 
     /////////////////////// CALLBACKS AND LISTENERS ///////////////////////
+    private final FriendListsManager.IViewProvider mViewProvider = new FriendListsManager.IViewProvider() {
 
-    private ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
+        @Override
+        public Cursor getCursor(String userId, String usersTableAlias, String... projection) {
+            return FriendsData.getFriendsOf(userId, usersTableAlias, projection);
+        }
+
+        @Override
+        public int getLoaderId() {
+            return FriendsData.LOADER_ID_FRIEND_LIST;
+        }
+
+        @Override
+        public @Nullable
+        Activity activity() {
+            return getActivity();
+        }
+
+        @NonNull
+        @Override
+        public LoaderManager supportLoaderManager() {
+            return getActivity().getSupportLoaderManager();
+        }
+
+        @Override
+        public @NonNull TextView stageName() {
+            return mStageName;
+        }
+
+        @Override
+        public @NonNull ProgressBar stageProgress() {
+            return mStageProgress;
+        }
+
+        @Override
+        public @NonNull View stageViewsParent() {
+            return mStageLayout;
+        }
+
+
+        @Override
+        public void doChangeCursor(Cursor cursor) {
+            mCursorAdapter.changeCursor(cursor);
+        }
+
+        //ILoaderSource override
+        @Override
+        public @NonNull String value(int... index) {
+            return String.valueOf(mCurrentUser.id);
+        }
+    };
+
+    private final ImageLoader.OnDownloadStartedListener mDownloadStartedListener = new ImageLoader.OnDownloadStartedListener() {
         @Override
         public void onDownloadStarted(int id) {
             if(id == FriendsData.LOADER_ID_WHOSE_PHOTO) {
@@ -123,7 +164,7 @@ implements SearchView.OnQueryTextListener{
                 il = new ImageLoader(getActivity()
                         , new ILoaderSource() {
                     @Override
-                    public String value() {
+                    public String value(int... index) {
                         return FriendsData.getCurrentUser().photo_200;
                     }
                 });
@@ -131,7 +172,7 @@ implements SearchView.OnQueryTextListener{
             } else {
                 il = new ImageLoader(getActivity(), new ILoaderSource() {
                     @Override
-                    public String value() {
+                    public String value(int... index) {
                         return args.getString(KEY_PHOTO);
                     }
                 });
@@ -162,88 +203,6 @@ implements SearchView.OnQueryTextListener{
 
         @Override
         public void onLoaderReset(Loader<String> loader) {}
-    };
-
-    private FriendListLoader.IProgressListener mProgressListener = new FriendListLoader.IProgressListener() {
-        @Override
-        public void onProgressUpdate(final int stageResourceId, long progress, long total) {
-            final int percentage = (int) (progress * PROGRESS_TOTAL / total);
-            mLastStageId = stageResourceId;
-            mLastStagePercentage = percentage;
-
-            //ToDo: Extract into a parametrized handler
-            /*^*/
-            FragmentActivity activity = getActivity();
-            if (activity != null)
-                activity.runOnUiThread(
-            /*/
-                mHandler.post(
-            /*$*/
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    CharSequence text = getText(stageResourceId);
-                                    mStageName.setText(text);
-
-                                    mStageProgress.setProgress(percentage);
-                                    mStageLayout.setVisibility(View.VISIBLE);
-                                } catch (IllegalStateException e){
-                                    Log.w("FLF:onProgressUpdate", "Activity detached unexpectedly", e);
-                                }
-                            }
-                        });
-        }
-
-        @Override
-        public void onError(final String errorMsg) {
-            final FragmentActivity activity = getActivity();
-            if (activity != null)
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(activity, errorMsg, Toast.LENGTH_LONG).show();
-                    }
-                });
-        }
-    };
-    private LoaderManager.LoaderCallbacks<Cursor> mFriendlistLoaderCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            FriendListLoader fll = new FriendListLoader(
-                    getActivity()
-                    , new ILoaderSource() {
-                        @Override
-                        public String value() {
-                            return String.valueOf(mCurrentUser.id);
-                        }
-                    }
-                    , new FriendListLoader.ICursorProvider() {
-                        @Override
-                        public Cursor getCursor(String userId, String[] projection) {
-                            return FriendsData.getFriendsOf(userId, USERS_TABLE_ALIAS, projection);
-                        }
-                    }
-
-                    , USERS_TABLE_ALIAS + "." + FriendsContract.Users._ID + " AS " + FriendsContract.Users._ID
-                    , FriendsContract.Users.COLUMN_USER_NAME
-                    , FriendsContract.Users.COLUMN_USER_PHOTO200
-            );
-            fll.registerProgressListener(mProgressListener);
-            return fll;
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-            mLastStageId = FriendsData.Invalid.RESOURCE;
-            mLastStagePercentage = FriendsData.Invalid.PROGRESS;
-
-            mCursorAdapter.changeCursor(cursor);
-            mStageLayout.setVisibility(View.GONE);
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {}
     };
 
     /////////////////////// CONSTRUCTORS ///////////////////////
@@ -284,8 +243,6 @@ implements SearchView.OnQueryTextListener{
         }
         if (savedInstanceState != null) {
             mLastPhotoProgress = savedInstanceState.getBoolean(KEY_PHOTO_PROGRESS, false);
-            mLastStageId = savedInstanceState.getInt(KEY_STAGE_ID, FriendsData.Invalid.RESOURCE);
-            mLastStagePercentage = savedInstanceState.getInt(KEY_STAGE_PROGRESS, FriendsData.Invalid.PROGRESS);
         }
     }
 
@@ -315,10 +272,9 @@ implements SearchView.OnQueryTextListener{
 
         mStageName = (TextView) view.findViewById(R.id.stage_name);
         mStageProgress = (ProgressBar) view.findViewById(R.id.stage_progress);
-        mStageLayout = (RelativeLayout) view.findViewById(R.id.stage_layout);
-        if (mLastStageId != FriendsData.Invalid.RESOURCE){
-            mProgressListener.onProgressUpdate(mLastStageId, mLastStagePercentage, PROGRESS_TOTAL);
-        }
+        mStageLayout = view.findViewById(R.id.stage_layout);
+
+        FriendListsManager.getInstance(mViewProvider).handleStage(FriendsData.LOADER_ID_FRIEND_LIST);
         setHasOptionsMenu(true);
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
@@ -327,18 +283,8 @@ implements SearchView.OnQueryTextListener{
             Context context = view.getContext();
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
 
-            final String[][] from = {{
-                    FriendsContract.Users._ID //should go first for the {@link #updateImageView} to work properly
-                    , FriendsContract.Users.COLUMN_USER_NAME
-                    , FriendsContract.Users.COLUMN_USER_PHOTO200
-            }};
-            final int[][] to = {{
-                    R.id.friend_layout, R.id.friend_name, R.id.friend_photo
-            }};
-            final int[] keys = {0 /*_id*/, 1/*name*/};
-
             mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
-                    , from, to, keys
+                    , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO, FriendListsManager.SEARCH_FIELDS
                     , R.layout.fragment_user
             ){
                 @Override
@@ -385,12 +331,6 @@ implements SearchView.OnQueryTextListener{
         if (mLastPhotoProgress){
             outState.putBoolean(KEY_PHOTO_PROGRESS, true);
         }
-        if (mLastStageId != FriendsData.Invalid.RESOURCE){
-            outState.putInt(KEY_STAGE_ID, mLastStageId);
-        }
-        if (mLastStagePercentage != FriendsData.Invalid.PROGRESS){
-            outState.putInt(KEY_STAGE_PROGRESS, mLastStagePercentage);
-        }
     }
 
     @Override
@@ -406,19 +346,10 @@ implements SearchView.OnQueryTextListener{
             mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
 
             //ToDo: extract to a common delegate
-
             refreshUserPhoto(FriendsData.LOADER_ID_WHOSE_PHOTO, null, reload);
 
-            final LoaderManager lm = getActivity().getSupportLoaderManager();
             //start friend list loader
-            Loader ldr = lm.getLoader(FriendsData.LOADER_ID_FRIEND_LIST);
-            lm.initLoader(FriendsData.LOADER_ID_FRIEND_LIST, null, mFriendlistLoaderCallback);
-            if (ldr != null){
-                ((FriendListLoader)ldr).registerProgressListener(mProgressListener);
-                if (reload) {
-                    ldr.onContentChanged();
-                }
-            }
+            FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_FRIEND_LIST, reload);
         }
     }
 

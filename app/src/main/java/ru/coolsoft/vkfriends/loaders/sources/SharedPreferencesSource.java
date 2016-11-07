@@ -15,7 +15,7 @@ public class SharedPreferencesSource implements ILoaderSource {
     }
 
     @Override
-    public String value() {
+    public String value(int... index) {
         return mSP.getString(mKey, null);
     }
 }

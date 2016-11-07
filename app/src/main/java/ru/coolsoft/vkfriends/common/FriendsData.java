@@ -1,4 +1,4 @@
-package ru.coolsoft.vkfriends;
+package ru.coolsoft.vkfriends.common;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import ru.coolsoft.vkfriends.VKFApplication;
 import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.db.FriendsDbHelper;
 
@@ -33,10 +34,12 @@ public class FriendsData {
 
     public final static int LOADER_ID_USER_PHOTO = 1;
     public final static int LOADER_ID_WHOSE_PHOTO = 2;
+    public final static int LOADER_ID_COMMON_FRIENDS_LIST = 3;
 
     public final static int LOADER_ID_FRIEND_LIST = 10;
     public final static int LOADER_ID_LEFT_USER_PHOTO = 11;
     public final static int LOADER_ID_RIGHT_USER_PHOTO = 12;
+
 
     public final static int LOADER_ID_FRIENDLIST_PHOTO_START = 10000;
 
@@ -121,6 +124,21 @@ public class FriendsData {
                 , new String[]{userId}
         );
     }
+    public static Cursor getCommonFriendsOf(String user1Id, String user2id, String usersTableAlias, String... columns){
+        return db().rawQuery("SELECT " + TextUtils.join(", ", columns) + " FROM "
+                + FriendsContract.Users.TABLE_NAME + " " + usersTableAlias + " INNER JOIN "
+                + FriendsContract.Friends.TABLE_NAME + " f1 ON f1."
+                + FriendsContract.Friends.COLUMN_FRIEND_ID + "="
+                + usersTableAlias + "." + FriendsContract.Users._ID + " INNER JOIN "
+                + FriendsContract.Friends.TABLE_NAME + " f2 ON f2."
+                + FriendsContract.Friends.COLUMN_FRIEND_ID + "="
+                + usersTableAlias + "." + FriendsContract.Users._ID + " WHERE f1."
+                + FriendsContract.Friends._ID + " = ? AND f2."
+                + FriendsContract.Friends._ID + " = ?"
+
+                , new String[]{user1Id, user2id}
+        );
+    }
 
     public static void setCurrentUser(VKApiUser me){
         VKFApplication.app().setMe(me);
@@ -144,8 +162,6 @@ public class FriendsData {
     }
 
     public static class Invalid {
-        public final static int RESOURCE = 0;
-        public final static int PROGRESS = -1;
         public static final int INDEX = -1;
     }
 }

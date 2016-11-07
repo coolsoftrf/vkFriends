@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:background="@color/userPickerBackground">
+    android:background="@color/dimmingBackground">
     <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,35 +38,6 @@
         </FrameLayout>
     </android.support.v7.widget.Toolbar>
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <include layout="@layout/friend_list"/>
 
-        <include layout="@layout/friend_list"/>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/stage_layout"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="@dimen/text_margin"
-            android:visibility="gone"
-            >
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/stage_name"
-                android:gravity="center"
-                android:textAppearance="?attr/textAppearanceListItem"
-                />
-            <ProgressBar
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/stage_progress"
-                android:layout_below="@id/stage_name"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                />
-        </RelativeLayout>
-
-    </FrameLayout>
 </LinearLayout>

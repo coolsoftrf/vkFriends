@@ -1,6 +1,6 @@
 package ru.coolsoft.vkfriends.loaders.sources;
 
-import ru.coolsoft.vkfriends.FriendsData;
+import ru.coolsoft.vkfriends.common.FriendsData;
 
 /**
  * Provides a way for Image Loader to get source URL from database
@@ -11,7 +11,7 @@ public abstract class DatabaseUserSource implements ILoaderSource {
     protected abstract String getObjFieldName();
 
     @Override
-    public String value() {
+    public String value(int... index) {
         final String objFN = getObjFieldName();
         return FriendsData.getUser(getUserId()
                 , new String[]{getDbFieldName()}, new String[]{objFN})

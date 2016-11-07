@@ -2,7 +2,7 @@ package ru.coolsoft.vkfriends.db;
 
 import android.provider.BaseColumns;
 
-import ru.coolsoft.vkfriends.FriendsData;
+import ru.coolsoft.vkfriends.common.FriendsData;
 
 /**
  * Created by Bobby© on 12.04.2015.

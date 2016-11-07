@@ -99,4 +99,11 @@ public class ExampleInstrumentedTest {
     //show user name and photo and friends in offline mode
 
     //change user - name, photo and friends should update
+
+    //while friend list loading is in progress minimise and restore the app
+    // - indicator should proceed from the last position
+    // - when progress is finished the progress views should hide
+
+    //while user photo loading is in progress minimise and restore the app
+    // - when progress is finished the waiter should hide
 }

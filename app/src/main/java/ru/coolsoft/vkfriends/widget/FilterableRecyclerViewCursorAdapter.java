@@ -6,7 +6,7 @@ import android.provider.BaseColumns;
 
 import java.util.ArrayList;
 
-import ru.coolsoft.vkfriends.FriendsData;
+import ru.coolsoft.vkfriends.common.FriendsData;
 
 /**
  * Created by Bobby© on 01.11.2016.
