@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.vk.sdk.api.VKApiConst;
 import com.vk.sdk.api.VKParameters;
@@ -12,6 +13,7 @@ import com.vk.sdk.api.model.VKApiUser;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +52,18 @@ public class FriendsData {
         }
 
         return mDb;
+    }
+
+    public static void cleanFilesDir(){
+        File dir = VKFApplication.app().getFilesDir();
+        if (dir != null) {
+            for (File f : dir.listFiles()) {
+                if(!f.delete()){
+                    //do nothing with the files we can't handle
+                    Log.v("cleanup", "can't remove " + f.getName());
+                }
+            }
+        }
     }
 
     public static void updateUserData(VKApiUser user){

@@ -149,6 +149,10 @@ public class ImageLoader extends AsyncTaskLoader<String> {
         final String[] pathParts =  imageUrl.split(File.separator);
         final String fileName = pathParts[pathParts.length - 1];
 
-        return new File(getContext().getFilesDir(), fileName);
+        File dir = getContext().getExternalCacheDir();
+        if (dir == null){
+            dir = getContext().getCacheDir();
+        }
+        return new File(dir, fileName);
     }
 }

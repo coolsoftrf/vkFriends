@@ -10,6 +10,8 @@ import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.model.VKApiUser;
 
+import ru.coolsoft.vkfriends.common.FriendsData;
+
 /**
  * Created by Bobby© on 05.10.2016.
  * The application class that stores global data and contains general watchdogs
@@ -46,6 +48,7 @@ public class VKFApplication extends Application {
     public void onCreate() {
         super.onCreate();
         mApp = this;
+        FriendsData.cleanFilesDir();
 
         mVKAccessTokenTracker.startTracking();
         VKSdk.initialize(this);

@@ -469,6 +469,16 @@ implements AppBarLayout.OnOffsetChangedListener
             mAdapter = new SimpleRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO
                     , R.layout.fragment_user){
+
+                @Override
+                public void onClick(View v) {
+                    final String tag = (String) v.getTag();
+                    if (tag != null) {
+                        Intent openContact = new Intent(Intent.ACTION_VIEW, Uri.parse("http://vk.com/id" + tag));
+                        startActivity(openContact);
+                    }
+                }
+
                 @Override
                 protected void updateImageView(String imageUriString, ImageView view) {
                     //Start loader for the specified view with the SELECTed image URI string
