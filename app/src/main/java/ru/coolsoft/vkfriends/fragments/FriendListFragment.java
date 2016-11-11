@@ -15,7 +15,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -26,6 +25,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -35,6 +35,7 @@ import com.vk.sdk.api.model.VKApiUser;
 import java.io.File;
 import java.lang.ref.WeakReference;
 
+import ru.coolsoft.vkfriends.VKFApplication;
 import ru.coolsoft.vkfriends.common.FriendListsManager;
 import ru.coolsoft.vkfriends.common.FriendsData;
 import ru.coolsoft.vkfriends.R;
@@ -280,9 +281,6 @@ implements SearchView.OnQueryTextListener{
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
         if (recyclerView != null) {
-            Context context = view.getContext();
-            recyclerView.setLayoutManager(new LinearLayoutManager(context));
-
             mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO, FriendListsManager.SEARCH_FIELDS
                     , R.layout.fragment_user
@@ -300,6 +298,9 @@ implements SearchView.OnQueryTextListener{
                 protected void updateImageView(String imageUriString, ImageView view) {
                     //Start loader for the specified view with the SELECTed image URI string
                     final int id = Integer.parseInt(((View)view.getParent()).getTag().toString()) + FriendsData.LOADER_ID_FRIENDLIST_PHOTO_START;
+
+                    //FixMe: it's not guaranteed that the item won't change its associated view while the loading is in progress
+                    //better find proper image view in onLoadFinished handler
                     mFriendlistPhotos.put(id, new WeakReference<>(view));
                     Bundle args = new Bundle();
                     args.putString(KEY_PHOTO, imageUriString);
@@ -328,9 +329,21 @@ implements SearchView.OnQueryTextListener{
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+
         if (mLastPhotoProgress){
             outState.putBoolean(KEY_PHOTO_PROGRESS, true);
         }
+    }
+
+    @Override
+    public void onStop() {
+        InputMethodManager imm = (InputMethodManager) VKFApplication.app().getSystemService(Context.INPUT_METHOD_SERVICE);
+        View view = getView();
+        if ( view != null ) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+
+        super.onStop();
     }
 
     @Override
@@ -338,6 +351,7 @@ implements SearchView.OnQueryTextListener{
         super.onDetach();
         mListener = null;
     }
+
 
     /////////////////////// HELPER METHODS ///////////////////////
 

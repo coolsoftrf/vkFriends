@@ -696,7 +696,7 @@ implements AppBarLayout.OnOffsetChangedListener
                 updateUsers(FLAG_RIGHT);
             }
         } else {
-            //impossible case, but {@code changed} has to be initialized
+            //impossible case, but {@code changed} has to be initialized anyway
             changed = false;
         }
 

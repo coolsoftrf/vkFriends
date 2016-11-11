@@ -106,4 +106,8 @@ public class ExampleInstrumentedTest {
 
     //while user photo loading is in progress minimise and restore the app
     // - when progress is finished the waiter should hide
+
+    //select first user, rotate screen, select second friend
+    // - friend list loading should pass
+    // - common friends should get displayed (with at least the one currently logged in)
 }

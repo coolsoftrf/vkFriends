@@ -144,8 +144,12 @@
 
         </FrameLayout>
 
-        <include layout="@layout/content_main" />
-
+        <include layout="@layout/friend_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:layout_marginTop="?attr/actionBarSize"
+        />
     </android.support.design.widget.CoordinatorLayout>
 
     <FrameLayout

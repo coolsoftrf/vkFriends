@@ -33,26 +33,25 @@ public class FriendListLoader extends CursorLoader {
         void onError(int loaderId, String errorMsg);
     }
 
-    private final ICursorProvider mCursorProvider;
-    private final ILoaderSource mSource;
+    private ICursorProvider mCursorProvider;
+    private ILoaderSource mSource;
     private final String[] mProjection;
     private final String mAlias;
 
     private IProgressListener mProgressListener;
-    //String mSortOrder;
 
-    public FriendListLoader(Context context, ILoaderSource userIdSource
-            , ICursorProvider cursorProvider
+    public FriendListLoader(Context context
             , String usersTableAlias, String... usersTableProjection) {
         super(context);
         mProjection = usersTableProjection;
         mAlias = usersTableAlias;
-        //mSortOrder = sortOrder;
-        mSource = userIdSource;
-        mCursorProvider = cursorProvider;
     }
 
-    public void registerProgressListener(IProgressListener progressListener){
+    public void setProviders(ICursorProvider cursorProvider, ILoaderSource source){
+        mCursorProvider = cursorProvider;
+        mSource = source;
+    }
+    public void setProgressListener(IProgressListener progressListener){
         mProgressListener = progressListener;
     }
 
@@ -70,7 +69,7 @@ public class FriendListLoader extends CursorLoader {
 
     @Override
     public Cursor loadInBackground() {
-        final String userId = mSource.value();
+        final String userId = mSource == null ? null : mSource.value();
 
         /*=== DEBUG DELAY ===*
         final int delayMax = 5;
@@ -160,6 +159,7 @@ public class FriendListLoader extends CursorLoader {
                 }
             }
         }
-        return mCursorProvider.getCursor(userId, mAlias, mProjection);
+
+        return mCursorProvider == null ? null : mCursorProvider.getCursor(userId, mAlias, mProjection);
     }
 }

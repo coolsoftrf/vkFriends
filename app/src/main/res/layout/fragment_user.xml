@@ -8,10 +8,12 @@
     >
 
     <ImageView
-        android:layout_width="@dimen/list_photo_size"
-        android:layout_height="@dimen/list_photo_size"
+        android:layout_width="?android:attr/listPreferredItemHeight"
+        android:layout_height="?android:attr/listPreferredItemHeight"
         android:id="@+id/friend_photo"
-        android:layout_margin="@dimen/photo_margin"
+        android:layout_marginLeft="@dimen/photo_margin"
+        android:layout_marginStart="@dimen/photo_margin"
+        android:layout_marginTop="@dimen/photo_margin"
         android:contentDescription="@string/friend_image_description" />
 
     <TextView

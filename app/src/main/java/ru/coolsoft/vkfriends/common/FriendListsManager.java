@@ -78,10 +78,11 @@ implements FriendListLoader.IProgressListener
 
     public void updateList(int loaderId, boolean fullReload){
         final LoaderManager lm = mViewProviders.get(loaderId).supportLoaderManager();
-        Loader ldr = lm.getLoader(loaderId);
+        final Loader ldr = lm.getLoader(loaderId);
         lm.initLoader(loaderId, null, this);
         if (ldr != null){
-            ((FriendListLoader)ldr).registerProgressListener(this);
+            final IViewProvider provider = mViewProviders.get(loaderId);
+            ((FriendListLoader)ldr).setProviders(provider, provider);
             if (fullReload) {
                 ldr.onContentChanged();
             }
@@ -141,17 +142,17 @@ implements FriendListLoader.IProgressListener
 //LoaderCallbacks
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        FriendListLoader fll = new FriendListLoader(
+        final FriendListLoader fll = new FriendListLoader(
                 mViewProviders.get(id).activity()
-                , mViewProviders.get(id)
-                , mViewProviders.get(id)
-
                 , USERS_TABLE_ALIAS
                 , USERS_TABLE_ALIAS + "." + FriendsContract.Users._ID + " AS " + FriendsContract.Users._ID
                 , FriendsContract.Users.COLUMN_USER_NAME
                 , FriendsContract.Users.COLUMN_USER_PHOTO200
         );
-        fll.registerProgressListener(this);
+
+        final IViewProvider provider = mViewProviders.get(id);
+        fll.setProviders(provider, provider);
+        fll.setProgressListener(this);
         return fll;
     }
 
