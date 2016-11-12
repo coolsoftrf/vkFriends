@@ -49,6 +49,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 
+import ru.coolsoft.vkfriends.common.AdapterImageManagementDelegate;
 import ru.coolsoft.vkfriends.common.FriendListsManager;
 import ru.coolsoft.vkfriends.common.FriendsData;
 import ru.coolsoft.vkfriends.fragments.FriendListFragment;
@@ -76,9 +77,6 @@ implements AppBarLayout.OnOffsetChangedListener
     @IntDef({View.VISIBLE, View.INVISIBLE, View.GONE})
     @Retention(RetentionPolicy.SOURCE)
     @interface Visibility{}
-
-    //loader argument keys
-    private static final String KEY_PHOTO = "key_photo";
 
     //main view controls
     private FrameLayout mFl;
@@ -234,7 +232,7 @@ implements AppBarLayout.OnOffsetChangedListener
                     src = new ILoaderSource() {
                         @Override
                         public String value(int... index) {
-                            return args.getString(KEY_PHOTO);
+                            return args.getString(AdapterImageManagementDelegate.KEY_PHOTO);
                         }
                     };
             }
@@ -256,7 +254,12 @@ implements AppBarLayout.OnOffsetChangedListener
                 case FriendsData.LOADER_ID_RIGHT_USER_PHOTO:
                     imageView = mContactImageRight; break;
                 default:
-                    imageView = mFriendlistPhotos.get(loader.getId()).get();
+                    WeakReference<ImageView> refIV = mFriendlistPhotos.get(loader.getId());
+                    if (refIV != null) {
+                        imageView = refIV.get();
+                    } else {
+                        imageView = null;
+                    }
             }
             if (imageView != null) {
                 if (photoFileName != null){
@@ -466,8 +469,25 @@ implements AppBarLayout.OnOffsetChangedListener
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
         // Set the adapter
         if (recyclerView != null) {
+            final AdapterImageManagementDelegate delegate = new AdapterImageManagementDelegate() {
+                @Override
+                public void addImageView(int key, ImageView view) {
+                    mFriendlistPhotos.put(key, new WeakReference<>(view));
+                }
+
+                @Override
+                public void recycleImageView(int key) {
+                    mFriendlistPhotos.remove(key);
+                }
+
+                @Override
+                public void refreshPhoto(int loaderId, Bundle args) {
+                    refreshUserPhoto(loaderId, args, false);
+                }
+            };
             mAdapter = new SimpleRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO
+                    , delegate
                     , R.layout.fragment_user){
 
                 @Override
@@ -477,17 +497,6 @@ implements AppBarLayout.OnOffsetChangedListener
                         Intent openContact = new Intent(Intent.ACTION_VIEW, Uri.parse("http://vk.com/id" + tag));
                         startActivity(openContact);
                     }
-                }
-
-                @Override
-                protected void updateImageView(String imageUriString, ImageView view) {
-                    //Start loader for the specified view with the SELECTed image URI string
-                    final int id = Integer.parseInt(((View)view.getParent()).getTag().toString()) + FriendsData.LOADER_ID_FRIENDLIST_PHOTO_START;
-                    mFriendlistPhotos.put(id, new WeakReference<>(view));
-                    Bundle args = new Bundle();
-                    args.putString(KEY_PHOTO, imageUriString);
-
-                    refreshUserPhoto(id, args, false);
                 }
             };
             recyclerView.setAdapter(mAdapter);

@@ -41,10 +41,12 @@ public abstract class FilterableRecyclerViewCursorAdapter extends SimpleRecycler
     private ArrayList<Change> mChanges;
 
     public FilterableRecyclerViewCursorAdapter(Cursor cursor, String[][] from, int[][] to
-            , int[] filterableFieldIndices, int... viewTypeIdLayoutResourceIDs) {
+            , int[] filterableFieldIndices
+            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
+            , int... viewTypeIdLayoutResourceIDs) {
         super();
         mFieldIndicesToFilter = filterableFieldIndices;
-        init(cursor, from, to, viewTypeIdLayoutResourceIDs);
+        init(cursor, from, to, delegate, viewTypeIdLayoutResourceIDs);
     }
 
     private static String[] getCursorValues(Cursor cursor) {

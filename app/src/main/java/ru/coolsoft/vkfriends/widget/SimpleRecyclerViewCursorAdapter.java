@@ -23,26 +23,38 @@ import java.util.Map;
 public class SimpleRecyclerViewCursorAdapter
 extends RecyclerViewCursorAdapter<SimpleRecyclerViewCursorAdapterViewHolder>
 implements View.OnClickListener{
+    public interface SimpleRecyclerViewCursorAdapterViewManagementDelegate {
+        void updateTextView(String value, TextView view);
+        void updateImageView(String value, ImageView view);
+        void onViewRecycled(SimpleRecyclerViewCursorAdapterViewHolder holder);
+    }
+
     private String mFrom[][];
     private List<Map<String, Integer>> mFromIndexMaps = new ArrayList<>();
     private int mTo[][];
     private int mViewTypeIDs[];
+
+    private SimpleRecyclerViewCursorAdapterViewManagementDelegate mViewManagementDelegate;
 
     protected SimpleRecyclerViewCursorAdapter(){
         super();
     }
 
     public SimpleRecyclerViewCursorAdapter(Cursor cursor, String from[][], int to[][]
+            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
             , int... viewTypeIdLayoutResourceIDs) {
         this();
-        init(cursor, from, to, viewTypeIdLayoutResourceIDs);
+        init(cursor, from, to, delegate, viewTypeIdLayoutResourceIDs);
     }
 
     protected void init(Cursor cursor, String from[][], int to[][]
+            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
             , int... viewTypeIdLayoutResourceIDs){
         mFrom = from;
         mTo = to;
         mViewTypeIDs = viewTypeIdLayoutResourceIDs;
+
+        mViewManagementDelegate = delegate;
 
         swapCursor(cursor);
     }
@@ -94,6 +106,10 @@ implements View.OnClickListener{
         }
     }
 
+    public static void defaultUpdateTextView(String value, TextView view){
+        view.setText(value);
+    }
+
     /**
      * Called when a data string for the specified {@code view} is ready.
      * Default implementation puts the {@code value} as the {@code view} text
@@ -102,7 +118,15 @@ implements View.OnClickListener{
      * @param view the text view to hold the selected {@code value}
      */
     protected void updateTextView(String value, TextView view) {
-        view.setText(value);
+        if (mViewManagementDelegate != null){
+            mViewManagementDelegate.updateTextView(value, view);
+        } else {
+            defaultUpdateTextView(value, view);
+        }
+    }
+
+    public static void defaultUpdateImageView(String value, ImageView view) {
+        view.setImageURI(Uri.parse(value));
     }
 
     /**
@@ -113,6 +137,17 @@ implements View.OnClickListener{
      * @param view the image view to hold the selected {@code value}
      */
     protected void updateImageView(String value, ImageView view) {
-        view.setImageURI(Uri.parse(value));
+        if (mViewManagementDelegate != null){
+            mViewManagementDelegate.updateImageView(value, view);
+        } else {
+            defaultUpdateImageView(value, view);
+        }
+    }
+
+    @Override
+    public void onViewRecycled(SimpleRecyclerViewCursorAdapterViewHolder holder) {
+        if (mViewManagementDelegate != null){
+            mViewManagementDelegate.onViewRecycled(holder);
+        }
     }
 }

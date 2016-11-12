@@ -36,6 +36,7 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 
 import ru.coolsoft.vkfriends.VKFApplication;
+import ru.coolsoft.vkfriends.common.AdapterImageManagementDelegate;
 import ru.coolsoft.vkfriends.common.FriendListsManager;
 import ru.coolsoft.vkfriends.common.FriendsData;
 import ru.coolsoft.vkfriends.R;
@@ -184,12 +185,17 @@ implements SearchView.OnQueryTextListener{
 
         @Override
         public void onLoadFinished(Loader<String> loader, String photoFileName) {
-            ImageView imageView;
+            final ImageView imageView;
             if (loader.getId() == FriendsData.LOADER_ID_WHOSE_PHOTO) {
                 mLastPhotoProgress = false;
                 imageView = mAvatar;
             } else {
-                imageView = mFriendlistPhotos.get(loader.getId()).get();
+                WeakReference<ImageView> refPhoto = mFriendlistPhotos.get(loader.getId());
+                if (refPhoto != null) {
+                    imageView = refPhoto.get();
+                } else {
+                    imageView = null;
+                }
             }
 
             if (imageView != null) {
@@ -281,8 +287,25 @@ implements SearchView.OnQueryTextListener{
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
         if (recyclerView != null) {
+            final AdapterImageManagementDelegate delegate = new AdapterImageManagementDelegate() {
+                @Override
+                public void addImageView(int key, ImageView view) {
+                    mFriendlistPhotos.put(key, new WeakReference<>(view));
+                }
+
+                @Override
+                public void recycleImageView(int key) {
+                    mFriendlistPhotos.remove(key);
+                }
+
+                @Override
+                public void refreshPhoto(int loaderId, Bundle args) {
+                    refreshUserPhoto(loaderId, args, false);
+                }
+            };
             mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO, FriendListsManager.SEARCH_FIELDS
+                    , delegate
                     , R.layout.fragment_user
             ){
                 @Override
@@ -292,20 +315,6 @@ implements SearchView.OnQueryTextListener{
                         mListener.onListFragmentInteraction(getTag(), (String) tag);
                         getFragmentManager().popBackStack();
                     }
-                }
-
-                @Override
-                protected void updateImageView(String imageUriString, ImageView view) {
-                    //Start loader for the specified view with the SELECTed image URI string
-                    final int id = Integer.parseInt(((View)view.getParent()).getTag().toString()) + FriendsData.LOADER_ID_FRIENDLIST_PHOTO_START;
-
-                    //FixMe: it's not guaranteed that the item won't change its associated view while the loading is in progress
-                    //better find proper image view in onLoadFinished handler
-                    mFriendlistPhotos.put(id, new WeakReference<>(view));
-                    Bundle args = new Bundle();
-                    args.putString(KEY_PHOTO, imageUriString);
-
-                    refreshUserPhoto(id, args, false);
                 }
             };
             recyclerView.setAdapter(mCursorAdapter);

@@ -110,4 +110,7 @@ public class ExampleInstrumentedTest {
     //select first user, rotate screen, select second friend
     // - friend list loading should pass
     // - common friends should get displayed (with at least the one currently logged in)
+
+    //open friendlist, scroll couple pages down, mininize, restore
+    // - images should correctly correspond to the users
 }
