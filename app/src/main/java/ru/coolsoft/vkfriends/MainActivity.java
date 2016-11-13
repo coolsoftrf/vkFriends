@@ -125,7 +125,7 @@ implements AppBarLayout.OnOffsetChangedListener
     private VKRequest.VKRequestListener mVKCurrentUserRequestListener = new VKRequest.VKRequestListener() {
         @Override
         public void onComplete(VKResponse response) {
-            Log.d(TAG, "USER data retrieved");
+            Log.i(TAG, "USER data retrieved");
 
             if (response.parsedModel instanceof VKList){
                 Object o = ((VKList)response.parsedModel).get(0);
@@ -180,7 +180,7 @@ implements AppBarLayout.OnOffsetChangedListener
 
         @Override
         public void onError(VKError error) {
-            Log.d(TAG, "Error retrieving USER data: " + error.errorMessage);
+            Log.w(TAG, "Error retrieving USER data: " + error.errorMessage);
 
             //try offline mode
             VKAccessToken token = VKAccessToken.tokenFromSharedPreferences(MainActivity.this, VKFApplication.PREF_KEY_ACCESS_TOKEN);
@@ -273,7 +273,7 @@ implements AppBarLayout.OnOffsetChangedListener
 
         @Override
         public void onLoaderReset(Loader<String> loader) {
-            Log.d(TAG, "image loader reset");
+            Log.w(TAG, "image loader reset");
         }
     };
 
@@ -488,7 +488,7 @@ implements AppBarLayout.OnOffsetChangedListener
             mAdapter = new SimpleRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO
                     , delegate
-                    , R.layout.fragment_user){
+                    , R.layout.friendlist_user){
 
                 @Override
                 public void onClick(View v) {
@@ -529,13 +529,13 @@ implements AppBarLayout.OnOffsetChangedListener
      * Changes User Name shared preference accordingly that will cause {@link #refreshNavigationView()} to be invoked
      */
     private void requestAccountDetails(){
-        Log.d(TAG, "Access Token update handler");
+        //Log.d(TAG, "Access Token update handler");
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         final VKAccessToken token = VKAccessToken.tokenFromSharedPreferences(this, VKFApplication.PREF_KEY_ACCESS_TOKEN);
         if (token == null){
             final String name = sp.getString(VKFApplication.PREF_KEY_USERNAME, null);
             if (name != null){
-                Log.d(TAG, "removing USERNAME preference");
+                Log.i(TAG, "removing USERNAME preference");
                 SharedPreferences.Editor editor = sp.edit();
                 editor.remove(VKFApplication.PREF_KEY_USERNAME);
                 editor.remove(VKFApplication.PREF_KEY_USERPHOTO);
@@ -545,7 +545,7 @@ implements AppBarLayout.OnOffsetChangedListener
             mWaiter.setVisibility(View.VISIBLE);
 
             VKRequest request = VKApi.users().get(FriendsData.PARAMS_USER_DETAILS);
-            Log.d(TAG, "requesting USER data");
+            Log.i(TAG, "requesting USER data");
             request.executeWithListener(mVKCurrentUserRequestListener);
         }
     }
@@ -562,7 +562,7 @@ implements AppBarLayout.OnOffsetChangedListener
         final MenuItem miLogin = mNavView.getMenu().findItem(R.id.action_login);
         final String name = PreferenceManager.getDefaultSharedPreferences(this).getString(VKFApplication.PREF_KEY_USERNAME, null);
 
-        Log.d(TAG, "Updating user name in Navigation View. Current name is " + String.valueOf(name));
+        //Log.d(TAG, "Updating user name in Navigation View. Current name is " + String.valueOf(name));
         if (name == null) {
             miLogin.setTitle(R.string.action_login);
         } else {
@@ -637,10 +637,13 @@ implements AppBarLayout.OnOffsetChangedListener
 
         //noinspection SimplifiableIfStatement
         switch (id){
+/*
             case R.id.action_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+
+*/
             case R.id.action_login:
                 VKSdk.login(this, VKScope.FRIENDS, VKScope.PHOTOS);
                 return true;

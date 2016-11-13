@@ -306,7 +306,7 @@ implements SearchView.OnQueryTextListener{
             mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
                     , FriendListsManager.FIELDS_FROM, FriendListsManager.VEWS_TO, FriendListsManager.SEARCH_FIELDS
                     , delegate
-                    , R.layout.fragment_user
+                    , R.layout.friendlist_user
             ){
                 @Override
                 public void onClick(View v) {

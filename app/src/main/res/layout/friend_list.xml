@@ -15,7 +15,7 @@
         android:layout_height="match_parent"
         app:layoutManager="LinearLayoutManager"
         tools:context=".fragments.FriendListFragment"
-        tools:listitem="@layout/fragment_user" />
+        tools:listitem="@layout/friendlist_user" />
 
     <RelativeLayout
         android:layout_width="match_parent"

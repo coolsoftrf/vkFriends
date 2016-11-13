@@ -113,4 +113,7 @@ public class ExampleInstrumentedTest {
 
     //open friendlist, scroll couple pages down, mininize, restore
     // - images should correctly correspond to the users
+
+    //on a clean installation perform login
+    // - user photo should load an replace the user placeholder
 }

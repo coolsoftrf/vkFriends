@@ -1,18 +1,18 @@
 <resources>
     <string name="app_name">VK Friends</string>
 
-    <string name="action_settings">Settings</string>
+    <!--<string name="action_settings">Settings</string>-->
     <string name="action_login">Login</string>
 
-    <string name="name1_placeholder">1st Contact Long Name</string>
-    <string name="name2_placeholder">2nd Contact Long Name</string>
+    <string name="name1_placeholder">1st Contact Name</string>
+    <string name="name2_placeholder">2nd Contact Name</string>
 
     <string name="padding_content_description">Padding view for app bar</string>
     <string name="title_activity_settings">Settings</string>
 
     <string name="search">Search</string>
 
-    <string name="label_friends_of">Friends of:</string>
+    <string name="label_friends_of">Friends of</string>
     <string name="whose_image_description">user photo</string>
     <string name="friend_image_description">friend\'s photo</string>
 

@@ -7,9 +7,11 @@
         android:title="@string/action_login"
         app:showAsAction="never"
         android:icon="@drawable/user"/>
+    <!--
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
         app:showAsAction="never"
         android:icon="@android:drawable/ic_menu_preferences"/>
+    -->
 </menu>

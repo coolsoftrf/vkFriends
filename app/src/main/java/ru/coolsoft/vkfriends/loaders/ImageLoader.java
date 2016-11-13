@@ -75,8 +75,9 @@ public class ImageLoader extends AsyncTaskLoader<String> {
 
                     int count = 0;
                     Log.i(TAG, "downloading '" + imageUrl + "' to '" + targetFile + "'");
-                    while ((count += out.transferFrom(in, count, size - count)) < size) {
-                        Log.d(TAG, "bytes transferred " + count + " out of " + size);
+                    while ((count /*+= out.transferFrom(in, count, size - count)*/) < size) {
+                        count += out.transferFrom(in, count, size - count);
+                        //Log.d(TAG, "bytes transferred " + count + " out of " + size);
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "error occurred while downloading '" + imageUrl + "' to '" + targetFile + "'", e);

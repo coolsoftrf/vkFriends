@@ -32,7 +32,7 @@ public class VKFApplication extends Application {
     private VKAccessTokenTracker mVKAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
         public void onVKAccessTokenChanged(VKAccessToken oldToken, VKAccessToken newToken) {
-            Log.d(TAG, "Auth Token has just changed from " + String.valueOf(oldToken) + " to " + String.valueOf(newToken));
+            Log.i(TAG, "Auth Token has just changed from " + String.valueOf(oldToken) + " to " + String.valueOf(newToken));
             if (newToken == null) {
                 // VKAccessToken is invalid
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(VKFApplication.this).edit();

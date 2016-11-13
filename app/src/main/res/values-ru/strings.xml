@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Друзья ВК</string>
 
-    <string name="action_settings">Настройки…</string>
+    <!--<string name="action_settings">Настройки…</string>-->
     <string name="action_login">Пользователь</string>
 
     <string name="name1_placeholder">Имя первого контакта</string>
