@@ -80,6 +80,7 @@ implements SearchView.OnQueryTextListener{
     //references to worker objects
     private FilterableRecyclerViewCursorAdapter mCursorAdapter;
     private OnListFragmentInteractionListener mListener;
+    private boolean mFullReload = true;
 
     /////////////////////// CALLBACKS AND LISTENERS ///////////////////////
     private final FriendListsManager.IViewProvider mViewProvider = new FriendListsManager.IViewProvider() {
@@ -281,7 +282,6 @@ implements SearchView.OnQueryTextListener{
         mStageProgress = (ProgressBar) view.findViewById(R.id.stage_progress);
         mStageLayout = view.findViewById(R.id.stage_layout);
 
-        FriendListsManager.getInstance(mViewProvider).handleStage(FriendsData.LOADER_ID_FRIEND_LIST);
         setHasOptionsMenu(true);
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
@@ -320,9 +320,19 @@ implements SearchView.OnQueryTextListener{
             recyclerView.setAdapter(mCursorAdapter);
         }
 
-        refreshTitle(savedInstanceState == null);
-
+        mFullReload = savedInstanceState == null;
+        refresh(mFullReload);
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshList(mFullReload);
+
+        //ToDo: either change to {@code true} or invent another way to keep data actual
+        //once there comes more that one host of friends
+        mFullReload = false;
     }
 
     @Override
@@ -364,7 +374,7 @@ implements SearchView.OnQueryTextListener{
 
     /////////////////////// HELPER METHODS ///////////////////////
 
-    private void refreshTitle(boolean reload) {
+    private void refresh(boolean reload) {
         if (mCurrentUser != null) {
             mToolbar.setSubtitle(mCurrentUser.fields.optString(FriendsData.FIELDS_NAME_GEN));
 
@@ -372,8 +382,12 @@ implements SearchView.OnQueryTextListener{
             refreshUserPhoto(FriendsData.LOADER_ID_WHOSE_PHOTO, null, reload);
 
             //start friend list loader
-            FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_FRIEND_LIST, reload);
+            refreshList(reload);
         }
+    }
+
+    private void refreshList(boolean reload) {
+        FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_FRIEND_LIST, reload);
     }
 
     private void refreshUserPhoto(int loaderId, Bundle args, boolean reload) {

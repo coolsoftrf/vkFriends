@@ -108,6 +108,7 @@ implements AppBarLayout.OnOffsetChangedListener
     //list controls
     private SimpleRecyclerViewCursorAdapter mAdapter;
     private SparseArray<WeakReference<ImageView>> mFriendlistPhotos = new SparseArray<>();
+    private boolean mFullReload = true;
 
     ////////////////////// callback handlers //////////////////////
     //Handler mDelayHandler = new Handler();
@@ -361,7 +362,18 @@ implements AppBarLayout.OnOffsetChangedListener
         initParams();
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
-        initViews(savedInstanceState == null);
+        mFullReload = savedInstanceState == null;
+        initViews();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_COMMON_FRIENDS_LIST, mFullReload);
+        //for some magic reason the data that was loaded but not reported to UI is not kept in Loader
+        //so we need to start full reload next time we resume activity (e. g. from minimized state)
+        mFullReload = true;
     }
 
     @Override
@@ -410,7 +422,7 @@ implements AppBarLayout.OnOffsetChangedListener
         mTextSizeEnd = getResources().getDimensionPixelSize(R.dimen.text_size_small);
     }
 
-    private void initViews(boolean reload) {
+    private void initViews() {
         //navigation view controls
         ImageView anchor = (ImageView) findViewById(R.id.padding);
         if (anchor!= null) {
@@ -506,7 +518,7 @@ implements AppBarLayout.OnOffsetChangedListener
         mStageProgress = (ProgressBar) findViewById(R.id.stage_progress);
         mStageParent = findViewById(R.id.stage_layout);
 
-        FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_COMMON_FRIENDS_LIST, reload);
+        FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_COMMON_FRIENDS_LIST, mFullReload);
     }
 
     private void refreshUserPhoto(int loaderId, Bundle args, boolean reload) {

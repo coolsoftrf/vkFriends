@@ -70,14 +70,9 @@ implements FriendListLoader.IProgressListener
         return _instance;
     }
 
-    public void handleStage(int loaderId){
-        if (mLastStageId.get(loaderId) != null){
-            onProgressUpdate(loaderId, mLastStageId.get(loaderId), mLastStagePercentage.get(loaderId), PROGRESS_TOTAL);
-        }
-    }
-
     public void updateList(int loaderId, boolean fullReload){
         final LoaderManager lm = mViewProviders.get(loaderId).supportLoaderManager();
+
         final Loader ldr = lm.getLoader(loaderId);
         lm.initLoader(loaderId, null, this);
         if (ldr != null){
@@ -150,10 +145,14 @@ implements FriendListLoader.IProgressListener
                 , FriendsContract.Users.COLUMN_USER_PHOTO200
         );
 
-        final IViewProvider provider = mViewProviders.get(id);
-        fll.setProviders(provider, provider);
+        setLoaderProviders(id, fll);
         fll.setProgressListener(this);
         return fll;
+    }
+
+    private void setLoaderProviders(int id, FriendListLoader fll) {
+        final IViewProvider provider = mViewProviders.get(id);
+        fll.setProviders(provider, provider);
     }
 
     @Override
