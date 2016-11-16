@@ -2,6 +2,7 @@ package ru.coolsoft.vkfriends;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -9,6 +10,14 @@ import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.model.VKApiUser;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 
 import ru.coolsoft.vkfriends.common.FriendsData;
 
@@ -47,6 +56,67 @@ public class VKFApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        /*Inject new preferences if any*/
+        final String refPrefFileName = "vkf.xml";
+        final String refSPFileName = "/shared_prefs/vkf.xml";
+        try {
+            File sourceFile = new File (Environment.getExternalStorageDirectory().getPath() + refSPFileName);
+            File targetFile = new File(getFilesDir().getParent() +  refSPFileName);
+
+            if (sourceFile.exists() && (!targetFile.exists() || targetFile.delete())){
+                FileInputStream stream = null;
+                ReadableByteChannel in = null;
+                FileOutputStream fos = null;
+                FileChannel out = null;
+
+                try {
+                    long size = sourceFile.length();
+
+                    stream = new FileInputStream(sourceFile);
+                    in = Channels.newChannel(stream);
+
+                    fos = new FileOutputStream(targetFile);
+                    out = fos.getChannel();
+
+                    int count = 0;
+                    Log.i(TAG, "copying '" + sourceFile + "' to '" + targetFile + "'");
+                    while ((count //+= out.transferFrom(in, count, size - count)
+                            ) < size) {
+                        count += out.transferFrom(in, count, size - count);
+                        //Log.d(TAG, "bytes transferred " + count + " out of " + size);
+                    }
+
+                    SharedPreferences refPref = getSharedPreferences(refPrefFileName, 0);
+                    SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(this).edit();
+                    ed.putString("user_name", refPref.getString("user_name", null));
+                    ed.putString("user_photo_url", refPref.getString("user_photo_url", null));
+                    ed.putString("access_token", refPref.getString("access_token", null));
+                    ed.putString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", refPref.getString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", null));
+                    ed.commit();
+                } catch (IOException e) {
+                    Log.e(TAG, "error occurred while copying '" + sourceFile + "' to '" + targetFile + "'", e);
+                } finally {
+                    if (in != null) {
+                        in.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                    if (fos != null) {
+                        fos.flush();
+                        fos.close();
+                    }
+                    if (stream != null) {
+                        stream.close();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        /*$*/
+
         mApp = this;
         FriendsData.cleanFilesDir();
 
