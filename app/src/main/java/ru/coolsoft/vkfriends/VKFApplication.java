@@ -94,23 +94,11 @@ public class VKFApplication extends Application {
 
                     SharedPreferences refPref = getSharedPreferences(refPrefFileName, 0);
                     SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(this).edit();
-                    String val = refPref.getString("user_name", null);
-                    if (val != null) {
-                        ed.putString("user_name", val);
-                    }
-                    val = refPref.getString("user_photo_url", null);
-                    if (val != null) {
-                        ed.putString("user_photo_url", val);
-                    }
-                    val = refPref.getString("access_token", null);
-                    if (val != null) {
-                        ed.putString("access_token", val);
-                    }
-                    val = refPref.getString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", null);
-                    if (val != null) {
-                        ed.putString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", val);
-                    }
-                    ed.commit();
+                    copyPref("user_name", refPref, ed);
+                    copyPref("user_photo_url", refPref, ed);
+                    copyPref("access_token", refPref, ed);
+                    copyPref("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", refPref, ed);
+                    ed.apply();
                 } catch (IOException e) {
                     Log.e(TAG, "error occurred while copying '" + sourceFile + "' to '" + targetFile + "'", e);
                 } finally {
@@ -146,6 +134,14 @@ public class VKFApplication extends Application {
 
         mVKAccessTokenTracker.startTracking();
         VKSdk.initialize(this);
+    }
+
+    private void copyPref(String key, SharedPreferences refPref, SharedPreferences.Editor ed) {
+        String val;
+        val = refPref.getString(key, null);
+        if (val != null) {
+            ed.putString(key, val);
+        }
     }
 
     public static VKFApplication app(){
