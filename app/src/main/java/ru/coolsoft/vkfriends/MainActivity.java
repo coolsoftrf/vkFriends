@@ -322,7 +322,7 @@ implements AppBarLayout.OnOffsetChangedListener
         }
 
         @Override
-        public Cursor getCursor(String userId, String usersTableAlias, String... usersTableProjection) {
+        public Cursor getCursor(String usersTableAlias, String... usersTableProjection) {
             return FriendsData.getCommonFriendsOf(
                     value(0), value(1)
                     , usersTableAlias, usersTableProjection

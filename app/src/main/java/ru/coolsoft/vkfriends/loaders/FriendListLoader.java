@@ -26,7 +26,7 @@ import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
  */
 public class FriendListLoader extends CursorLoader {
     public interface ICursorProvider{
-        Cursor getCursor(String userId, String usersTableAlias, String... usersTableProjection);
+        Cursor getCursor(String usersTableAlias, String... usersTableProjection);
     }
     public interface IProgressListener{
         void onProgressUpdate(int loaderId, int stageResourceId, long progress, long total);
@@ -160,6 +160,6 @@ public class FriendListLoader extends CursorLoader {
             }
         }
 
-        return mCursorProvider == null ? null : mCursorProvider.getCursor(userId, mAlias, mProjection);
+        return mCursorProvider == null ? null : mCursorProvider.getCursor(mAlias, mProjection);
     }
 }
