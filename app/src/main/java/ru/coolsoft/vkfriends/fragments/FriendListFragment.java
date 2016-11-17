@@ -86,8 +86,14 @@ implements SearchView.OnQueryTextListener{
     private final FriendListsManager.IViewProvider mViewProvider = new FriendListsManager.IViewProvider() {
 
         @Override
-        public Cursor getCursor(String userId, String usersTableAlias, String... projection) {
-            return FriendsData.getFriendsOf(userId, usersTableAlias, projection);
+        public Cursor getCursor(String usersTableAlias, String... projection) {
+            String value = value();
+            if (value == null){
+                //the following string may be used in DB to supply stub data
+                // to display when there is no user registered
+                value = "";
+            }
+            return FriendsData.getFriendsOf(value, usersTableAlias, projection);
         }
 
         @Override
@@ -130,8 +136,8 @@ implements SearchView.OnQueryTextListener{
 
         //ILoaderSource override
         @Override
-        public @NonNull String value(int... index) {
-            return String.valueOf(mCurrentUser.id);
+        public String value(int... index) {
+            return mCurrentUser == null ? null : String.valueOf(mCurrentUser.id);
         }
     };
 
