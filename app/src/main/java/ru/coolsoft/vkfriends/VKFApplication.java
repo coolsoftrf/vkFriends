@@ -58,11 +58,14 @@ public class VKFApplication extends Application {
         super.onCreate();
 
         /*Inject new preferences if any*/
-        final String refPrefFileName = "vkf.xml";
-        final String refSPFileName = "/shared_prefs/vkf.xml";
+        final String refPrefFileName = "vkf";
+        final String refPrefFileNameFull = File.separator + refPrefFileName + ".xml";
+        final String refPrefTargetFileName = File.separator + "shared_prefs" + File.separator +  refPrefFileNameFull;
         try {
-            File sourceFile = new File (Environment.getExternalStorageDirectory().getPath() + refSPFileName);
-            File targetFile = new File(getFilesDir().getParent() +  refSPFileName);
+            File sourceFile = new File (Environment.getExternalStorageDirectory().getPath()
+                    + refPrefFileNameFull
+            );
+            File targetFile = new File(getFilesDir().getParent() + refPrefTargetFileName);
 
             if (sourceFile.exists() && (!targetFile.exists() || targetFile.delete())){
                 FileInputStream stream = null;
@@ -89,11 +92,26 @@ public class VKFApplication extends Application {
 
                     SharedPreferences refPref = getSharedPreferences(refPrefFileName, 0);
                     SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(this).edit();
-                    ed.putString("user_name", refPref.getString("user_name", null));
-                    ed.putString("user_photo_url", refPref.getString("user_photo_url", null));
-                    ed.putString("access_token", refPref.getString("access_token", null));
-                    ed.putString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", refPref.getString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", null));
+                    String val = refPref.getString("user_name", null);
+                    if (val != null) {
+                        ed.putString("user_name", val);
+                    }
+                    val = refPref.getString("user_photo_url", null);
+                    if (val != null) {
+                        ed.putString("user_photo_url", val);
+                    }
+                    val = refPref.getString("access_token", null);
+                    if (val != null) {
+                        ed.putString("access_token", val);
+                    }
+                    val = refPref.getString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", null);
+                    if (val != null) {
+                        ed.putString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", val);
+                    }
                     ed.commit();
+
+                    sourceFile.delete();
+                    targetFile.delete();
                 } catch (IOException e) {
                     Log.e(TAG, "error occurred while copying '" + sourceFile + "' to '" + targetFile + "'", e);
                 } finally {
