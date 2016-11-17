@@ -60,14 +60,16 @@ public class VKFApplication extends Application {
         /*Inject new preferences if any*/
         final String refPrefFileName = "vkf";
         final String refPrefFileNameFull = File.separator + refPrefFileName + ".xml";
-        final String refPrefTargetFileName = File.separator + "shared_prefs" + File.separator +  refPrefFileNameFull;
+        final String refPrefTargetFileName = File.separator + "shared_prefs" + refPrefFileNameFull;
         try {
             File sourceFile = new File (Environment.getExternalStorageDirectory().getPath()
                     + refPrefFileNameFull
             );
             File targetFile = new File(getFilesDir().getParent() + refPrefTargetFileName);
 
-            if (sourceFile.exists() && (!targetFile.exists() || targetFile.delete())){
+            if (sourceFile.exists()
+                    && (!targetFile.exists() || targetFile.delete())
+                    && (targetFile.getParentFile().exists() || targetFile.getParentFile().mkdirs())){
                 FileInputStream stream = null;
                 ReadableByteChannel in = null;
                 FileOutputStream fos = null;
@@ -109,9 +111,6 @@ public class VKFApplication extends Application {
                         ed.putString("VK_SDK_ACCESS_TOKEN_PLEASE_DONT_TOUCH", val);
                     }
                     ed.commit();
-
-                    sourceFile.delete();
-                    targetFile.delete();
                 } catch (IOException e) {
                     Log.e(TAG, "error occurred while copying '" + sourceFile + "' to '" + targetFile + "'", e);
                 } finally {
@@ -121,12 +120,19 @@ public class VKFApplication extends Application {
                     if (out != null) {
                         out.close();
                     }
+
                     if (fos != null) {
                         fos.flush();
                         fos.close();
+                        if (!targetFile.delete()){
+                            Log.w(TAG, "Failed to delete target " + targetFile);
+                        }
                     }
                     if (stream != null) {
                         stream.close();
+                        if (!sourceFile.delete()){
+                            Log.w(TAG, "Failed to delete source " + sourceFile);
+                        }
                     }
                 }
             }
