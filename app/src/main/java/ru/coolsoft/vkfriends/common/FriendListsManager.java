@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import ru.coolsoft.vkfriends.R;
+import ru.coolsoft.vkfriends.VKFApplication;
 import ru.coolsoft.vkfriends.db.FriendsContract;
 import ru.coolsoft.vkfriends.loaders.FriendListLoader;
 import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
@@ -35,6 +36,7 @@ implements FriendListLoader.IProgressListener
         @NonNull TextView stageName();
         @NonNull ProgressBar stageProgress();
         @NonNull View stageViewsParent();
+        @Nullable TextView amount();
         void doChangeCursor(Cursor cursor);
     }
 
@@ -163,6 +165,15 @@ implements FriendListLoader.IProgressListener
 
         mViewProviders.get(id).doChangeCursor(cursor);
         mViewProviders.get(id).stageViewsParent().setVisibility(View.GONE);
+
+        final int count =  cursor.getCount();
+        final TextView amounts = mViewProviders.get(id).amount();
+        if (amounts != null) {
+            amounts.setText(String.format(
+                    VKFApplication.app().getString(R.string.amount_found)
+                    , count));
+            amounts.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
+        }
     }
 
     @Override

@@ -91,6 +91,7 @@ implements AppBarLayout.OnOffsetChangedListener
     private TextView mStageName;
     private ProgressBar mStageProgress;
     private View mStageParent;
+    private TextView mAmount;
 
     //navigation controls
     private NavigationView mNavView;
@@ -238,7 +239,8 @@ implements AppBarLayout.OnOffsetChangedListener
                     };
             }
 
-            ImageLoader il = new ImageLoader(MainActivity.this, src);
+            ImageLoader il = new ImageLoader(MainActivity.this);
+            il.setLoaderSource(src);
             il.setOnDownloadStartedListener(mDownloadStartedListener);
             return  il;
         }
@@ -316,6 +318,12 @@ implements AppBarLayout.OnOffsetChangedListener
             return mStageParent;
         }
 
+        @NonNull
+        @Override
+        public TextView amount() {
+            return mAmount;
+        }
+
         @Override
         public void doChangeCursor(Cursor cursor) {
             mAdapter.changeCursor(cursor);
@@ -379,10 +387,19 @@ implements AppBarLayout.OnOffsetChangedListener
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home){
-            onBackPressed();
+            super.onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        FriendListFragment flf = (FriendListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.container);
+        if (!flf.popUser()) {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -517,6 +534,7 @@ implements AppBarLayout.OnOffsetChangedListener
         mStageName = (TextView) findViewById(R.id.stage_name);
         mStageProgress = (ProgressBar) findViewById(R.id.stage_progress);
         mStageParent = findViewById(R.id.stage_layout);
+        mAmount = (TextView) findViewById(R.id.amounts);
 
         FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_COMMON_FRIENDS_LIST, mFullReload);
     }

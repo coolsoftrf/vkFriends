@@ -8,14 +8,37 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!--ToDo: check if scrollbars and background solve the problem-->
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list"
         android:name="ru.coolsoft.vkfriends.FriendListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingBottom="@dimen/photo_margin"
+        android:scrollbars="vertical"
+        android:background="@android:color/transparent"
         app:layoutManager="LinearLayoutManager"
         tools:context=".fragments.FriendListFragment"
-        tools:listitem="@layout/friendlist_user" />
+        tools:listitem="@layout/friendlist_user"
+        />
+
+    <!--
+    ToDo: position the info label higher or wherever
+    so that it doesn't overlap buttons and user names
+    -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="?android:attr/listPreferredItemHeight"
+        android:id="@+id/amounts"
+        android:background="@android:drawable/dialog_holo_dark_frame"
+        android:textColor="?attr/textColorPrimary"
+        android:text="@string/amount_found"
+        android:gravity="center"
+        android:padding="@dimen/text_margin"
+        android:visibility="gone"
+        />
 
     <RelativeLayout
         android:layout_width="match_parent"

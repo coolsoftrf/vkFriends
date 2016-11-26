@@ -34,6 +34,7 @@ import com.vk.sdk.api.model.VKApiUser;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.util.Stack;
 
 import ru.coolsoft.vkfriends.VKFApplication;
 import ru.coolsoft.vkfriends.common.AdapterImageManagementDelegate;
@@ -63,6 +64,7 @@ implements SearchView.OnQueryTextListener{
 
     //current state fields
     private VKApiUser mCurrentUser;
+    private Stack<VKApiUser> mUserStack;
     private boolean mLastPhotoProgress = false;
     private SparseArray<WeakReference<ImageView>> mFriendlistPhotos = new SparseArray<>();
 
@@ -76,6 +78,7 @@ implements SearchView.OnQueryTextListener{
     private TextView mStageName;
     private ProgressBar mStageProgress;
     private View mStageLayout;
+    private TextView mAmount;
 
     //references to worker objects
     private FilterableRecyclerViewCursorAdapter mCursorAdapter;
@@ -128,6 +131,10 @@ implements SearchView.OnQueryTextListener{
             return mStageLayout;
         }
 
+        @Override
+        public @NonNull TextView amount() {
+            return mAmount;
+        }
 
         @Override
         public void doChangeCursor(Cursor cursor) {
@@ -164,22 +171,24 @@ implements SearchView.OnQueryTextListener{
             }
         }
     };
+    private final ILoaderSource mWhoseImageSource = new ILoaderSource() {
+        @Override
+        public String value(int... index) {
+            return mCurrentUser.photo_200;
+        }
+    };
     private LoaderManager.LoaderCallbacks<String> mUserPhotoLoaderCallback = new LoaderManager.LoaderCallbacks<String>() {
         //ToDo: extract to a common Delegate for all the loadable images
         @Override
         public Loader<String> onCreateLoader(int id, final Bundle args) {
             ImageLoader il;
             if (id == FriendsData.LOADER_ID_WHOSE_PHOTO) {
-                il = new ImageLoader(getActivity()
-                        , new ILoaderSource() {
-                    @Override
-                    public String value(int... index) {
-                        return FriendsData.getCurrentUser().photo_200;
-                    }
-                });
+                il = new ImageLoader(getActivity());
+                il.setLoaderSource(mWhoseImageSource);
                 il.setOnDownloadStartedListener(mDownloadStartedListener);
             } else {
-                il = new ImageLoader(getActivity(), new ILoaderSource() {
+                il = new ImageLoader(getActivity());
+                il.setLoaderSource(new ILoaderSource() {
                     @Override
                     public String value(int... index) {
                         return args.getString(KEY_PHOTO);
@@ -220,7 +229,6 @@ implements SearchView.OnQueryTextListener{
     };
 
     /////////////////////// CONSTRUCTORS ///////////////////////
-    @SuppressWarnings("unused")
     public static FriendListFragment newInstance(VKApiUser user) {
         FriendListFragment fragment = new FriendListFragment();
         Bundle args = new Bundle();
@@ -234,6 +242,19 @@ implements SearchView.OnQueryTextListener{
      * fragment (e.g. upon screen orientation changes).
      */
     public FriendListFragment() {}
+
+    /////////////////////// PUBLIC METHODS ///////////////////////
+
+    public boolean popUser(){
+        if (mUserStack == null || mUserStack.isEmpty()){
+            return false;
+        }
+
+        mCurrentUser = mUserStack.pop();
+        getArguments().putParcelable(ARG_ROOT_USER, mCurrentUser);
+        refresh(true);
+        return true;
+    }
 
     /////////////////////// FRAGMENT OVERRIDES ///////////////////////
 
@@ -287,6 +308,7 @@ implements SearchView.OnQueryTextListener{
         mStageName = (TextView) view.findViewById(R.id.stage_name);
         mStageProgress = (ProgressBar) view.findViewById(R.id.stage_progress);
         mStageLayout = view.findViewById(R.id.stage_layout);
+        mAmount = (TextView) view.findViewById(R.id.amounts);
 
         setHasOptionsMenu(true);
 
@@ -307,6 +329,29 @@ implements SearchView.OnQueryTextListener{
                 @Override
                 public void refreshPhoto(int loaderId, Bundle args) {
                     refreshUserPhoto(loaderId, args, false);
+                }
+
+                @Override
+                public void updateStaticViews(View container) {
+                    final View findFriends = container.findViewById(R.id.find_friends);
+                    if (findFriends != null){
+                        final Object tag = container.getTag();
+                        if (tag != null && tag instanceof String){
+                            findFriends.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if (mUserStack == null){
+                                        mUserStack = new Stack<>();
+                                    }
+                                    mUserStack.push(mCurrentUser);
+                                    mCurrentUser = FriendsData.getUser((String)tag);
+                                    getArguments().putParcelable(ARG_ROOT_USER, mCurrentUser);
+                                    refresh(true);
+                                }
+                            });
+                            findFriends.setVisibility(View.VISIBLE);
+                        }
+                    }
                 }
             };
             mCursorAdapter = new FilterableRecyclerViewCursorAdapter(null
@@ -405,7 +450,9 @@ implements SearchView.OnQueryTextListener{
 
         //but restart loading if only we already had it before (have NOT just run it at initialization)
         if (ldr != null) {
-            ((ImageLoader) ldr).setOnDownloadStartedListener(mDownloadStartedListener);
+            final ImageLoader il = (ImageLoader) ldr;
+            il.setLoaderSource(mWhoseImageSource);
+            il.setOnDownloadStartedListener(mDownloadStartedListener);
             if (reload) {
                 ldr.onContentChanged();
             }

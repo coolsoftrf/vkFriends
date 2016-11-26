@@ -22,8 +22,10 @@ import java.util.Map;
  */
 public class SimpleRecyclerViewCursorAdapter
 extends RecyclerViewCursorAdapter<SimpleRecyclerViewCursorAdapterViewHolder>
-implements View.OnClickListener{
-    public interface SimpleRecyclerViewCursorAdapterViewManagementDelegate {
+implements View.OnClickListener {
+    public interface IViewManagementDelegate {
+        void prepareItemView(View container);
+        void updateStaticViews(View container);
         void updateTextView(String value, TextView view);
         void updateImageView(String value, ImageView view);
         void onViewRecycled(SimpleRecyclerViewCursorAdapterViewHolder holder);
@@ -34,21 +36,21 @@ implements View.OnClickListener{
     private int mTo[][];
     private int mViewTypeIDs[];
 
-    private SimpleRecyclerViewCursorAdapterViewManagementDelegate mViewManagementDelegate;
+    private IViewManagementDelegate mViewManagementDelegate;
 
     protected SimpleRecyclerViewCursorAdapter(){
         super();
     }
 
     public SimpleRecyclerViewCursorAdapter(Cursor cursor, String from[][], int to[][]
-            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
+            , IViewManagementDelegate delegate
             , int... viewTypeIdLayoutResourceIDs) {
         this();
         init(cursor, from, to, delegate, viewTypeIdLayoutResourceIDs);
     }
 
     protected void init(Cursor cursor, String from[][], int to[][]
-            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
+            , IViewManagementDelegate delegate
             , int... viewTypeIdLayoutResourceIDs){
         mFrom = from;
         mTo = to;
@@ -82,7 +84,8 @@ implements View.OnClickListener{
         return new SimpleRecyclerViewCursorAdapterViewHolder(view, mFrom[viewType], mTo[viewType]);
     }
 
-    /**Default implementation is empty
+    /**
+     * Default implementation is empty
      *
      * @param v root view of the list item being clicked
      */
@@ -92,6 +95,7 @@ implements View.OnClickListener{
 
     @Override
     protected void onBindViewHolder(SimpleRecyclerViewCursorAdapterViewHolder holder, Cursor cursor, int viewType) {
+        onBeforeHolderBound(holder.itemView);
         for (int i = 0; i < mFrom[viewType].length && i < mTo[viewType].length; i++) {
             final String field = mFrom[viewType][i];
             final String value = cursor.getString(mFromIndexMaps.get(viewType).get(field));
@@ -104,6 +108,33 @@ implements View.OnClickListener{
                 view.setTag(value);
             }
         }
+        onAfterHolderBound(holder.itemView);
+    }
+
+    /**
+     * Called before any cursor field is filled in the item's associated view<br/>
+     * In case {@link IViewManagementDelegate} is specified, its {@link IViewManagementDelegate#prepareItemView(View)} is called<br/>
+     * Default implementation is empty
+     *
+     * @param container defines the item root view
+     */
+    protected void onBeforeHolderBound(View container) {
+        if (mViewManagementDelegate != null){
+            mViewManagementDelegate.prepareItemView(container);
+        }
+    }
+
+    /**
+     * Called after all cursor fields are filled in the item's associated view<br/>
+     * In case {@link IViewManagementDelegate} is specified, its {@link IViewManagementDelegate#updateStaticViews(View)} is called<br/>
+     * Default implementation is empty
+     *
+     * @param container defines the item root view
+     */
+    protected void onAfterHolderBound(View container) {
+        if (mViewManagementDelegate != null){
+            mViewManagementDelegate.updateStaticViews(container);
+        }
     }
 
     public static void defaultUpdateTextView(String value, TextView view){
@@ -111,7 +142,9 @@ implements View.OnClickListener{
     }
 
     /**
-     * Called when a data string for the specified {@code view} is ready.
+     * Called when a data string for the specified {@code view} is ready.<br/>
+     * In case {@link IViewManagementDelegate} is specified,
+     * its {@link IViewManagementDelegate#updateTextView(String, TextView)} is called<br/>
      * Default implementation puts the {@code value} as the {@code view} text
      *
      * @param value the string data selected for the specified {@code view}
@@ -130,7 +163,9 @@ implements View.OnClickListener{
     }
 
     /**
-     * Called when a data string for the specified {@code view} is ready.
+     * Called when a data string for the specified {@code view} is ready.<br/>
+     * In case {@link IViewManagementDelegate} is specified,
+     * its {@link IViewManagementDelegate#updateImageView(String, ImageView)} is called<br/>
      * Default implementation puts the {@code value} as a source image for the {@code view}
      *
      * @param value the string data selected for the specified {@code view}

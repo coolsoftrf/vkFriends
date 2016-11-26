@@ -116,4 +116,18 @@ public class ExampleInstrumentedTest {
 
     //on a clean installation perform login
     // - user photo should load an replace the user placeholder
+
+    //end/right alignments (e. g. @id/counts)
+
+    //on sub-user selection
+    // - user image is updated
+    // - whose field is updated
+    // - after rotation both name and image stay correct
+    // - after stack popping both name and image revert to previous user's ones
+
+    //open picker
+    //select sub-user
+    //pick user
+    //open picker
+    //=user name and photo are correct
 }

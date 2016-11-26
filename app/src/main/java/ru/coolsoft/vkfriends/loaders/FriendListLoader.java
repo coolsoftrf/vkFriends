@@ -140,22 +140,27 @@ public class FriendListLoader extends CursorLoader {
                 //put changed friends' information into DB
                 index = 0;
                 //ToDo: update activity flag
-                //ToDo: update data in a single transaction to speedup the process
-                for (VKApiUserFull user : friends[0]) {
-                    publishProgress(R.string.stage_organizing, index++, friends[0].size());
+                try {
+                    FriendsData.beginTran();
+                    for (VKApiUserFull user : friends[0]) {
+                        publishProgress(R.string.stage_organizing, index++, friends[0].size());
 
-                    final String strUserId = String.valueOf(user.id);
-                    final boolean matches;
-                    if (!mapCurrentFriends.containsKey(strUserId)) {
-                        FriendsData.updateFriendData(userId, strUserId);
-                        matches = false;
-                    } else {
-                        matches = mapCurrentFriends.get(strUserId).equals(user.toString() + user.photo_200);
-                    }
+                        final String strUserId = String.valueOf(user.id);
+                        final boolean matches;
+                        if (!mapCurrentFriends.containsKey(strUserId)) {
+                            FriendsData.updateFriendData(userId, strUserId);
+                            matches = false;
+                        } else {
+                            matches = mapCurrentFriends.get(strUserId).equals(user.toString() + user.photo_200);
+                        }
 
-                    if (!matches) {
-                        FriendsData.updateUserData(user);
+                        if (!matches) {
+                            FriendsData.updateUserData(user);
+                        }
                     }
+                    FriendsData.setTranSuccessful();
+                } finally{
+                    FriendsData.endTran();
                 }
             }
         }

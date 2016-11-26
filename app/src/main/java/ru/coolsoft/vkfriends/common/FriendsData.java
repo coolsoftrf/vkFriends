@@ -54,6 +54,17 @@ public class FriendsData {
         return mDb;
     }
 
+    public static void beginTran(){
+        db().beginTransaction();
+    }
+
+    public static void setTranSuccessful(){
+        db().setTransactionSuccessful();
+    }
+    public static void endTran(){
+        db().endTransaction();
+    }
+
     public static void cleanFilesDir(){
         File dir = VKFApplication.app().getFilesDir();
         if (dir != null) {

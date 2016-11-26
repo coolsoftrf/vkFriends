@@ -15,9 +15,19 @@ import ru.coolsoft.vkfriends.widget.SimpleRecyclerViewCursorAdapterViewHolder;
  * Provides Image management methods for {@link SimpleRecyclerViewCursorAdapter}
  */
 public abstract class AdapterImageManagementDelegate
-implements SimpleRecyclerViewCursorAdapter.SimpleRecyclerViewCursorAdapterViewManagementDelegate {
+implements SimpleRecyclerViewCursorAdapter.IViewManagementDelegate {
     //loader argument keys
     public static final String KEY_PHOTO = "key_photo";
+
+    @Override
+    public void updateStaticViews(View container) {
+        //empty default implementation
+    }
+
+    @Override
+    public void prepareItemView(View container) {
+        //empty default implementation
+    }
 
     @Override
     public void updateTextView(String value, TextView view) {

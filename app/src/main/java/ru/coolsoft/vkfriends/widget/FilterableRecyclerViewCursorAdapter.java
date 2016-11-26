@@ -42,7 +42,7 @@ public abstract class FilterableRecyclerViewCursorAdapter extends SimpleRecycler
 
     public FilterableRecyclerViewCursorAdapter(Cursor cursor, String[][] from, int[][] to
             , int[] filterableFieldIndices
-            , SimpleRecyclerViewCursorAdapterViewManagementDelegate delegate
+            , IViewManagementDelegate delegate
             , int... viewTypeIdLayoutResourceIDs) {
         super();
         mFieldIndicesToFilter = filterableFieldIndices;

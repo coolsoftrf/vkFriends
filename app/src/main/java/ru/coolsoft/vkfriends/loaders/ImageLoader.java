@@ -24,20 +24,11 @@ import ru.coolsoft.vkfriends.loaders.sources.ILoaderSource;
 public class ImageLoader extends AsyncTaskLoader<String> {
     private final static String TAG = ImageLoader.class.getSimpleName();
     private ILoaderSource mSource;
-
-    public interface OnDownloadStartedListener{
-        /**
-         * Called in UI thread to indicate that the image loading task will be started soon
-         * @param loaderId the ID of the loader which image loading task is going to start
-         */
-        void onDownloadStarted(int loaderId);
-    }
     private OnDownloadStartedListener mListener;
 
     //// constructor ////
-    public ImageLoader(Context context, ILoaderSource source) {
+    public ImageLoader(Context context) {
         super(context);
-        mSource = source;
     }
 
     //// Overrides of base methods ////
@@ -108,7 +99,7 @@ public class ImageLoader extends AsyncTaskLoader<String> {
 
     @Override
     protected void onStartLoading() {
-        final String imageUrl = mSource.value();
+        final String imageUrl = mSource == null ? null : mSource.value();
         if (imageUrl == null || imageUrl.equals("")){
             deliverResult(null);
             return;
@@ -140,9 +131,12 @@ public class ImageLoader extends AsyncTaskLoader<String> {
         forceLoad();
     }
 
-    //// Specific methods ////
+    //// Callback setters////
     public void setOnDownloadStartedListener (OnDownloadStartedListener listener){
         mListener = listener;
+    }
+    public void setLoaderSource (ILoaderSource source){
+        mSource = source;
     }
 
     //// supplementary methods ////
@@ -155,5 +149,14 @@ public class ImageLoader extends AsyncTaskLoader<String> {
             dir = getContext().getCacheDir();
         }
         return new File(dir, fileName);
+    }
+
+    // interface declarations
+    public interface OnDownloadStartedListener{
+        /**
+         * Called in UI thread to indicate that the image loading task will be started soon
+         * @param loaderId the ID of the loader which image loading task is going to start
+         */
+        void onDownloadStarted(int loaderId);
     }
 }
