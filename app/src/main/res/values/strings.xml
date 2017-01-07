@@ -18,6 +18,7 @@
     <string name="find_friends_button_description">Find friends</string>
 
     <string name="amount_found">%d found</string>
+    <string name="current_position">%d out of %d</string>
 
     <!-- Listeners related strings -->
     <!--<string name="stage_delay">Delay simulation…</string>-->

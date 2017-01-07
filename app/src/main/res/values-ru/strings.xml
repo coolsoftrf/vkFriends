@@ -18,6 +18,7 @@
     <string name="find_friends_button_description">Найти друзей</string>
 
     <string name="amount_found">Найдено: %d</string>
+    <string name="current_position">%d из %d</string>
 
     <!-- Listeners related strings -->
     <string name="stage_downloading">Загрузка списка…</string>

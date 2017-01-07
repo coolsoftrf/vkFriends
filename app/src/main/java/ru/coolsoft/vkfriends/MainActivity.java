@@ -397,7 +397,7 @@ implements AppBarLayout.OnOffsetChangedListener
     public void onBackPressed() {
         FriendListFragment flf = (FriendListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.container);
-        if (!flf.popUser()) {
+        if (flf == null || !flf.popUser()) {
             super.onBackPressed();
         }
     }
