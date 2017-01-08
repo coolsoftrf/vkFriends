@@ -16,9 +16,10 @@
     <string name="whose_image_description">фото пользователя</string>
     <string name="friend_image_description">фото друга</string>
     <string name="find_friends_button_description">Найти друзей</string>
+    <string name="view_profile_button_description">Открыть профиль</string>
 
     <string name="amount_found">Найдено: %d</string>
-    <string name="current_position">%d из %d</string>
+    <string name="current_position">%1$d из %2$d</string>
 
     <!-- Listeners related strings -->
     <string name="stage_downloading">Загрузка списка…</string>

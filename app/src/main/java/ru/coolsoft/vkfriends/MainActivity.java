@@ -521,10 +521,9 @@ implements AppBarLayout.OnOffsetChangedListener
 
                 @Override
                 public void onClick(View v) {
-                    final String tag = (String) v.getTag();
-                    if (tag != null) {
-                        Intent openContact = new Intent(Intent.ACTION_VIEW, Uri.parse("http://vk.com/id" + tag));
-                        startActivity(openContact);
+                    final Object tag =  v.getTag();
+                    if (tag != null && tag instanceof String) {
+                        VKFApplication.showUserProfile((String)tag);
                     }
                 }
             };

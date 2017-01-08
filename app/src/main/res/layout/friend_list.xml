@@ -24,10 +24,6 @@
             tools:listitem="@layout/friendlist_user"
             />
 
-        <!--
-        ToDo: position the info label higher or wherever
-        so that it doesn't overlap buttons and user names
-        -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,6 +36,7 @@
             android:gravity="center"
             android:padding="@dimen/text_margin"
             app:layout_handlerView="true"
+            app:layout_handlerTextView="true"
             android:visibility="gone"
             />
 

@@ -328,6 +328,7 @@ implements SearchView.OnQueryTextListener{
 
                 @Override
                 public void refreshPhoto(int loaderId, Bundle args) {
+                    //FixMe: all visible avatars become the same as current user's one once returned from profile viewing
                     refreshUserPhoto(loaderId, args, false);
                 }
 
@@ -350,6 +351,20 @@ implements SearchView.OnQueryTextListener{
                                 }
                             });
                             findFriends.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    final View showProfile = container.findViewById(R.id.showProfile);
+                    if (showProfile != null){
+                        final Object tag = container.getTag();
+                        if (tag != null && tag instanceof String){
+                            showProfile.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    VKFApplication.showUserProfile((String)tag);
+                                }
+                            });
+                            showProfile.setVisibility(View.VISIBLE);
                         }
                     }
                 }

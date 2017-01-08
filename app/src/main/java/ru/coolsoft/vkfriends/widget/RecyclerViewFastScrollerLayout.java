@@ -31,30 +31,27 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
 
     private int _height;
 
+    private boolean _isInitialized;
     private ObjectAnimator _currentAnimator;
+    private boolean _isManualScrolling;
     private RecyclerView.OnScrollListener _layoutScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            View firstVisibleView = recyclerView.getChildAt(0);
-            int firstVisiblePosition = recyclerView.getChildAdapterPosition(firstVisibleView);
-            int visibleRange = recyclerView.getChildCount();
-            int lastVisiblePosition = firstVisiblePosition + visibleRange;
+            View lastVisibleView = recyclerView.findChildViewUnder(1, _recyclerView.getHeight());
             int itemCount = recyclerView.getAdapter().getItemCount();
-            int position;
+            int lastVisiblePosition = lastVisibleView == null ? itemCount : recyclerView.getChildAdapterPosition(lastVisibleView) + 1;
 
             showBubble();
 
-            if (firstVisiblePosition == 0) {
-                position = 0;
-            } else if (lastVisiblePosition == itemCount - 1) {
-                position = itemCount - 1;
-            } else {
-                position = firstVisiblePosition;
+            if (!_isManualScrolling) {
+                float fraction = (float) recyclerView.computeVerticalScrollOffset() / (recyclerView.computeVerticalScrollRange() - recyclerView.computeVerticalScrollExtent());
+                int handleHeight = _handlerView.getHeight();
+                setPosition(handleHeight / 2 + ((_height - handleHeight) * fraction));
             }
-
-            float fraction = (float) position / (float) itemCount;
-            int handleHeight = _handlerView.getHeight();
-            setPosition(handleHeight / 2 + ((_height - handleHeight) * fraction));
+            if (_textView != null && (_isInitialized || _textView.getText().length() == 0)) {
+                String bubbleText = String.format(_textView.getContext().getString(R.string.current_position), lastVisiblePosition, itemCount);
+                _textView.setText(bubbleText);
+            }
         }
     };
     private OnTouchListener _handlerTouchListener = new OnTouchListener() {
@@ -64,6 +61,7 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
             switch(action)
             {
                 case MotionEvent.ACTION_DOWN:
+                    _isManualScrolling = true;
                     if(_handlerView.getVisibility() == View.INVISIBLE)
                         showBubble();
 
@@ -73,12 +71,17 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
                 case MotionEvent.ACTION_MOVE:
                     final int[] location = new int[2];
                     _recyclerView.getLocationOnScreen(location);
-                    setRecyclerViewPosition(event.getRawY() - location[1]);
+                    int y = (int)event.getRawY() - location[1];
+                    setPosition(y);
+                    setRecyclerViewPosition(y);
                     return true;
 
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    _isManualScrolling = false;
                     _handlerView.setSelected(false);
+
+                    removeAnimator(_currentAnimator);
                     hideBubble();
                     return true;
 
@@ -205,11 +208,6 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
 
             int targetPos = getValueInRange(0, itemCount - 1, (int)(fraction * (float)itemCount));
             _recyclerView.scrollToPosition(targetPos);
-
-            if (_textView != null) {
-                String bubbleText = String.format(_textView.getContext().getString(R.string.current_position), targetPos, itemCount);
-                _textView.setText(bubbleText);
-            }
         }
     }
 
@@ -267,9 +265,13 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
         _currentAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                Log.d(TAG, "showBubble - ended");
-                removeAnimator(_currentAnimator);
-                hideBubble();
+                if (_isManualScrolling) {
+                    Log.d(TAG, "showBubble - ended, keep active");
+                } else {
+                    Log.d(TAG, "showBubble - ended, pend hiding");
+                    removeAnimator(_currentAnimator);
+                    hideBubble();
+                }
             }
         });
         _currentAnimator.start();
@@ -309,5 +311,9 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
         Log.d(TAG, "hideBubble - pend");
         _currentAnimator.setStartDelay(BUBBLE_ANIMATION_DELAY);
         _currentAnimator.start();
+
+        if (!_isInitialized){
+            _isInitialized = true;
+        }
     }
 }

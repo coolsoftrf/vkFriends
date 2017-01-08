@@ -35,12 +35,22 @@
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/find_friends"
-                android:src="@android:drawable/ic_menu_send"
+                android:id="@+id/showProfile"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                android:background="@android:color/transparent"
                 android:contentDescription="@string/find_friends_button_description"
                 android:visibility="gone"
             />
-            <!--other buttons to be here-->
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/find_friends"
+                android:src="@android:drawable/ic_menu_send"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/find_friends_button_description"
+                android:visibility="gone"
+            />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

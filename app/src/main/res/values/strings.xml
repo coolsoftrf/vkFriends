@@ -16,9 +16,10 @@
     <string name="whose_image_description">user photo</string>
     <string name="friend_image_description">friend\'s photo</string>
     <string name="find_friends_button_description">Find friends</string>
+    <string name="view_profile_button_description">Show user profile</string>
 
     <string name="amount_found">%d found</string>
-    <string name="current_position">%d out of %d</string>
+    <string name="current_position">%1$d out of %2$d</string>
 
     <!-- Listeners related strings -->
     <!--<string name="stage_delay">Delay simulation…</string>-->

@@ -1,7 +1,9 @@
 package ru.coolsoft.vkfriends;
 
 import android.app.Application;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -85,5 +87,11 @@ public class VKFApplication extends Application {
     }
     public void setRight(VKApiUser right) {
         mUserRight.parse(right.fields);
+    }
+
+    public static void showUserProfile(String id){
+        Intent openContact = new Intent(Intent.ACTION_VIEW, Uri.parse("http://vk.com/id" + id));
+        openContact.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mApp.startActivity(openContact);
     }
 }
