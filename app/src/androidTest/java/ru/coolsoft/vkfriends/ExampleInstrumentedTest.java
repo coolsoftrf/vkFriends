@@ -141,4 +141,6 @@ public class ExampleInstrumentedTest {
     //navigate 3 users deep
     //rotate screen
     //= backspace key must navigate users backwards in exact reverse order
+
+    //bubble text changes dynamically on scroll - either fastscroll or list-bound
 }

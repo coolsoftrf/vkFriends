@@ -50,7 +50,7 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
                 int handleHeight = _handlerView.getHeight();
                 setPosition(handleHeight / 2 + ((_height - handleHeight) * fraction));
             }
-            if (_textView != null && (_isInitialized || _textView.getText().length() == 0)) {
+            if (_textView != null && (_isInitialized || _isManualScrolling || _textView.getText().length() == 0)) {
                 String bubbleText = String.format(_textView.getContext().getString(R.string.current_position), lastVisiblePosition, itemCount);
 
                 _internalTextModification = true;
@@ -94,7 +94,7 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
             }
         }
     };
-    private boolean _internalTextModification;
+    private volatile boolean _internalTextModification;
     private TextWatcher _textChangedListener = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -108,7 +108,7 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
 
         @Override
         public void afterTextChanged(Editable s) {
-            if (!_internalTextModification){
+            if (!_internalTextModification && !_isManualScrolling){
                 _isInitialized = false;
                 _layoutScrollListener.onScrolled(_recyclerView, 0, 0);
             } else {
