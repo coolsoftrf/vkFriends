@@ -189,21 +189,8 @@ implements SearchView.OnQueryTextListener{
         //ToDo: extract to a common Delegate for all the loadable images
         @Override
         public Loader<String> onCreateLoader(int id, final Bundle args) {
-            ImageLoader il;
-            if (id == FriendsData.LOADER_ID_WHOSE_PHOTO) {
-                il = new ImageLoader(getActivity());
-                il.setLoaderSource(mWhoseImageSource);
-                il.setOnDownloadStartedListener(mDownloadStartedListener);
-            } else {
-                il = new ImageLoader(getActivity());
-                il.setLoaderSource(new ILoaderSource() {
-                    @Override
-                    public String value(int... index) {
-                        return args.getString(KEY_PHOTO);
-                    }
-                });
-            }
-
+            ImageLoader il = new ImageLoader(getActivity());
+            setupLoader(il, id, args);
             return  il;
         }
 
@@ -344,7 +331,6 @@ implements SearchView.OnQueryTextListener{
 
                 @Override
                 public void refreshPhoto(int loaderId, Bundle args) {
-                    //FixMe: all visible avatars become the same as current user's one once returned from profile viewing
                     refreshUserPhoto(loaderId, args, false);
                 }
 
@@ -485,12 +471,24 @@ implements SearchView.OnQueryTextListener{
 
         //but restart loading if only we already had it before (have NOT just run it at initialization)
         if (ldr != null) {
-            final ImageLoader il = (ImageLoader) ldr;
-            il.setLoaderSource(mWhoseImageSource);
-            il.setOnDownloadStartedListener(mDownloadStartedListener);
+            setupLoader((ImageLoader) ldr, loaderId, args);
             if (reload) {
                 ldr.onContentChanged();
             }
+        }
+    }
+
+    private void setupLoader(ImageLoader il, int id, final Bundle args){
+        if (id == FriendsData.LOADER_ID_WHOSE_PHOTO) {
+            il.setLoaderSource(mWhoseImageSource);
+            il.setOnDownloadStartedListener(mDownloadStartedListener);
+        } else {
+            il.setLoaderSource(new ILoaderSource() {
+                @Override
+                public String value(int... index) {
+                    return args.getString(KEY_PHOTO);
+                }
+            });
         }
     }
 

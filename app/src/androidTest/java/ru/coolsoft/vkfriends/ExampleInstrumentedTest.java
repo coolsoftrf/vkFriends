@@ -129,7 +129,7 @@ public class ExampleInstrumentedTest {
     //select sub-user
     //pick user
     //open picker
-    //=user name and photo are correct
+    //= user name and photo are correct
 
     //open picker
     //(+/-)scroll down
@@ -143,4 +143,10 @@ public class ExampleInstrumentedTest {
     //= backspace key must navigate users backwards in exact reverse order
 
     //bubble text changes dynamically on scroll - either fastscroll or list-bound
+
+    //open picker
+    //open someone's friends
+    //minimize-resore
+    //go 1 level up
+    //= all photos are correct
 }
