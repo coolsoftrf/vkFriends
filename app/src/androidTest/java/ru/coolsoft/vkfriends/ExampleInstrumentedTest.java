@@ -130,4 +130,15 @@ public class ExampleInstrumentedTest {
     //pick user
     //open picker
     //=user name and photo are correct
+
+    //open picker
+    //(+/-)scroll down
+    //open sub-friends (go back to previous friends)
+    // - the list is on top
+    // - found amount indicatior is showing (not position indicator)
+
+    //open picker
+    //navigate 3 users deep
+    //rotate screen
+    //= backspace key must navigate users backwards in exact reverse order
 }

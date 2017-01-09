@@ -32,7 +32,6 @@
             android:id="@+id/amounts"
             android:background="@android:drawable/dialog_holo_dark_frame"
             android:textColor="?attr/textColorPrimary"
-            android:text="@string/amount_found"
             android:gravity="center"
             android:padding="@dimen/text_margin"
             app:layout_handlerView="true"

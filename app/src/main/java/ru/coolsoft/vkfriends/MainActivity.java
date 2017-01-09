@@ -107,6 +107,7 @@ implements AppBarLayout.OnOffsetChangedListener
     private int mAppBarHeight;
 
     //list controls
+    private RecyclerView mRecyclerView;
     private SimpleRecyclerViewCursorAdapter mAdapter;
     private SparseArray<WeakReference<ImageView>> mFriendlistPhotos = new SparseArray<>();
     private boolean mFullReload = true;
@@ -330,6 +331,11 @@ implements AppBarLayout.OnOffsetChangedListener
         }
 
         @Override
+        public void resetScroll() {
+            mRecyclerView.scrollToPosition(0);
+        }
+
+        @Override
         public Cursor getCursor(String usersTableAlias, String... usersTableProjection) {
             return FriendsData.getCommonFriendsOf(
                     value(0), value(1)
@@ -495,9 +501,9 @@ implements AppBarLayout.OnOffsetChangedListener
         mSpace2 = (Space) findViewById(R.id.spaceAvatar2);
 
         //list management
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
+        mRecyclerView = (RecyclerView) findViewById(R.id.list);
         // Set the adapter
-        if (recyclerView != null) {
+        if (mRecyclerView != null) {
             final AdapterImageManagementDelegate delegate = new AdapterImageManagementDelegate() {
                 @Override
                 public void addImageView(int key, ImageView view) {
@@ -527,7 +533,7 @@ implements AppBarLayout.OnOffsetChangedListener
                     }
                 }
             };
-            recyclerView.setAdapter(mAdapter);
+            mRecyclerView.setAdapter(mAdapter);
         }
         //loading progress controls
         mStageName = (TextView) findViewById(R.id.stage_name);
@@ -743,7 +749,6 @@ implements AppBarLayout.OnOffsetChangedListener
 
         if (changed) {
             mViewProvider.userId = itemId;
-            mViewProvider.doChangeCursor(null);
             FriendListsManager.getInstance(mViewProvider).updateList(FriendsData.LOADER_ID_COMMON_FRIENDS_LIST, true);
         }
     }

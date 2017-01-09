@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -50,6 +52,8 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
             }
             if (_textView != null && (_isInitialized || _textView.getText().length() == 0)) {
                 String bubbleText = String.format(_textView.getContext().getString(R.string.current_position), lastVisiblePosition, itemCount);
+
+                _internalTextModification = true;
                 _textView.setText(bubbleText);
             }
         }
@@ -90,6 +94,28 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
             }
         }
     };
+    private boolean _internalTextModification;
+    private TextWatcher _textChangedListener = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (!_internalTextModification){
+                _isInitialized = false;
+                _layoutScrollListener.onScrolled(_recyclerView, 0, 0);
+            } else {
+                _internalTextModification = false;
+            }
+        }
+    };
 
     public RecyclerViewFastScrollerLayout(Context context) {
         super(context);
@@ -127,6 +153,7 @@ public class RecyclerViewFastScrollerLayout extends RelativeLayout {
             }
             if (params.isHandlerTextView() && child instanceof TextView){
                 _textView = (TextView) child;
+                _textView.addTextChangedListener(_textChangedListener);
             }
         }
 

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 //import android.os.Handler;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -58,6 +59,7 @@ implements SearchView.OnQueryTextListener{
 
     //Instance state bundle keys
     private static final String KEY_PHOTO_PROGRESS = "photo-progress";
+    private static final String KEY_USER_STACK = "user-stack";
 
     //loader argument keys
     private static final String KEY_PHOTO = "key_photo";
@@ -74,6 +76,7 @@ implements SearchView.OnQueryTextListener{
     private ProgressBar mPhotoWaiter;
     private ImageView mAvatar;
     private Toolbar mToolbar;
+    private RecyclerView mRecyclerView;
 
     private TextView mStageName;
     private ProgressBar mStageProgress;
@@ -139,6 +142,11 @@ implements SearchView.OnQueryTextListener{
         @Override
         public void doChangeCursor(Cursor cursor) {
             mCursorAdapter.changeCursor(cursor);
+        }
+
+        @Override
+        public void resetScroll() {
+            mRecyclerView.scrollToPosition(0);
         }
 
         //ILoaderSource override
@@ -278,6 +286,14 @@ implements SearchView.OnQueryTextListener{
         }
         if (savedInstanceState != null) {
             mLastPhotoProgress = savedInstanceState.getBoolean(KEY_PHOTO_PROGRESS, false);
+
+            mUserStack = new Stack<>();
+            Parcelable[] users = savedInstanceState.getParcelableArray(KEY_USER_STACK);
+            if (users != null) {
+                for (Parcelable user : users) {
+                    mUserStack.push((VKApiUser) user);
+                }
+            }
         }
     }
 
@@ -312,9 +328,9 @@ implements SearchView.OnQueryTextListener{
 
         setHasOptionsMenu(true);
 
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.list);
         // Set the adapter
-        if (recyclerView != null) {
+        if (mRecyclerView != null) {
             final AdapterImageManagementDelegate delegate = new AdapterImageManagementDelegate() {
                 @Override
                 public void addImageView(int key, ImageView view) {
@@ -383,7 +399,7 @@ implements SearchView.OnQueryTextListener{
                     }
                 }
             };
-            recyclerView.setAdapter(mCursorAdapter);
+            mRecyclerView.setAdapter(mCursorAdapter);
         }
 
         mFullReload = savedInstanceState == null;
@@ -417,6 +433,10 @@ implements SearchView.OnQueryTextListener{
 
         if (mLastPhotoProgress){
             outState.putBoolean(KEY_PHOTO_PROGRESS, true);
+        }
+        if (mUserStack != null && !mUserStack.isEmpty()){
+            VKApiUser[] users = new VKApiUser[mUserStack.size()];
+            outState.putParcelableArray(KEY_USER_STACK, mUserStack.toArray(users));
         }
     }
 

@@ -165,6 +165,18 @@ public class FriendListLoader extends CursorLoader {
             }
         }
 
-        return mCursorProvider == null ? null : mCursorProvider.getCursor(mAlias, mProjection);
+        final Cursor result;
+        final int total;
+        if (mCursorProvider == null){
+            result = null;
+            total = -1;
+        } else {
+            result = mCursorProvider.getCursor(mAlias, mProjection);
+            total = result.getCount();
+        }
+        //indicate loading is finished
+        publishProgress(0, 0, total);
+
+        return result;
     }
 }

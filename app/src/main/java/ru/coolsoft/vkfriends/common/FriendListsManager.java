@@ -38,6 +38,7 @@ implements FriendListLoader.IProgressListener
         @NonNull View stageViewsParent();
         @Nullable TextView amount();
         void doChangeCursor(Cursor cursor);
+        void resetScroll();
     }
 
     public static final int PROGRESS_TOTAL = 100;
@@ -88,9 +89,13 @@ implements FriendListLoader.IProgressListener
 
 //IProgressListener implementation
     @Override
-    public void onProgressUpdate(final int loaderId, final int stageResourceId, long progress, long total) {
-        final int percentage = (int) (progress * PROGRESS_TOTAL / total);
-
+    public void onProgressUpdate(final int loaderId, final int stageResourceId, long progress, final long total) {
+        final int percentage;
+        if (total != 0) {
+            percentage = (int) (progress * PROGRESS_TOTAL / total);
+        } else {
+            percentage = 0;
+        }
         if (Integer.valueOf(percentage).equals(mLastStagePercentage.get(loaderId))
                 && Integer.valueOf(stageResourceId).equals(mLastStageId.get(loaderId))) {
             return;
@@ -111,11 +116,24 @@ implements FriendListLoader.IProgressListener
                         @Override
                         public void run() {
                             try {
-                                CharSequence text = activity.getText(stageResourceId);
-                                mViewProviders.get(loaderId).stageName().setText(text);
+                                if (stageResourceId == 0){
+                                    //hide progress and reset recycler view
+                                    mViewProviders.get(loaderId).stageViewsParent().setVisibility(View.GONE);
+                                    mViewProviders.get(loaderId).resetScroll();
 
-                                mViewProviders.get(loaderId).stageProgress().setProgress(percentage);
-                                mViewProviders.get(loaderId).stageViewsParent().setVisibility(View.VISIBLE);
+                                    final TextView amount = mViewProviders.get(loaderId).amount();
+                                    if (amount != null && total > 0) {
+                                        amount.setText(String.format(
+                                                VKFApplication.app().getString(R.string.amount_found)
+                                                , total));
+                                    }
+                                } else {
+                                    CharSequence text = activity.getText(stageResourceId);
+                                    mViewProviders.get(loaderId).stageName().setText(text);
+
+                                    mViewProviders.get(loaderId).stageProgress().setProgress(percentage);
+                                    mViewProviders.get(loaderId).stageViewsParent().setVisibility(View.VISIBLE);
+                                }
                             } catch (IllegalStateException e) {
                                 Log.w("FLF:onProgressUpdate", "Activity detached unexpectedly", e);
                             }
@@ -164,16 +182,6 @@ implements FriendListLoader.IProgressListener
         mLastStagePercentage.remove(id);
 
         mViewProviders.get(id).doChangeCursor(cursor);
-        mViewProviders.get(id).stageViewsParent().setVisibility(View.GONE);
-
-        final int count =  cursor.getCount();
-        final TextView amounts = mViewProviders.get(id).amount();
-        if (amounts != null) {
-            amounts.setText(String.format(
-                    VKFApplication.app().getString(R.string.amount_found)
-                    , count));
-            amounts.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
-        }
     }
 
     @Override
